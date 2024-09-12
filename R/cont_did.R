@@ -6,6 +6,16 @@
 #'  `cont_did` currently supports staggered treatment with continuous treatments using the
 #'  `np` package (=> kernel regression) under the hood.
 #'
+#' @param dname The name of the treatment variable in the data.  The functionality of
+#'  `cont_did` is different from the `did` package in that the treatment variable is
+#'  the "amount" of the treatment in a particular period, rather than `gname` which
+#'  gives the time period when a unit becomes treated.  Based on the `dname` variable,
+#'  the `cont_did` package will "figure out" the treatment timing.
+#'
+#'  To give an example, suppose that the treatment variable is called `D` in data frame
+#'  `df`.  Furthermore, suppose there are 4 time periods, and a particular unit becomes
+#'  treated in the time period 3 with dose 5.  Then, `dname="D"`, and for this unit
+#'  `df$D` will be `c(0, 0, 5, 5)`.`
 #' @inheritParams did::att_gt
 #' @param target_parameter Two options are "level" and "slope".  In the first case, the function
 #'  will report level effects, i.e., ATT's.  In the second case, the function will report
@@ -26,6 +36,7 @@
 #' @return cont_did_obj
 #' @export
 cont_did <- function(yname,
+                     dname,
                      tname,
                      gname,
                      idname,
@@ -33,6 +44,7 @@ cont_did <- function(yname,
                      data,
                      target_parameter = c("level", "slope"),
                      aggregation = c("dose", "eventstudy", "none"),
+                     treatment_type = c("continuous", "discrete"),
                      allow_unbalanced_panel = FALSE,
                      control_group = c("notyettreated", "nevertreated", "eventuallytreated"),
                      anticipation = 0,
@@ -54,6 +66,7 @@ cont_did <- function(yname,
   if (xformula != ~1) stop("covariates not currently supported, please use xformula=~1")
   assert_choice(target_parameter, choices = c("level", "derivative"))
   assert_choice(aggregation, choices = c("dose", "eventstudy", "none"))
+  assert_choice(treatment_type, choices = c("continuous", "discrete"))
   if (aggregation == "none") stop("currently only support `dose` and `eventstudy` aggregations")
   if (allow_unbalanced_panel) stop("unbalanced panel not currently supported")
   assert_choice(control_group, choices = c("notyettreated", "nevertreated", "eventuallytreated"))
@@ -67,6 +80,20 @@ cont_did <- function(yname,
   assert_choice(base_period, choices = c("varying", "universal"))
   if (!is.FALSE(pl)) stop("parallel processing not supported yet, set pl=FALSE")
 
+  # staggered treatment check
+
+  if (treatment_type == "discrete") {
+    stop("discrete treatment not supported yet")
+  }
+
+  if (treatment_type == "continuous" && aggregation == "dose") {
+    attgt_fun <- cont_did_acrt
+  }
+
+  if (treatment_type == "continuous" && aggregation == "eventstudy") {
+    attgt_fun <- pte::did_attgt
+  }
+
   res <- pte2(
     yname = yname,
     gname = gname,
@@ -75,17 +102,20 @@ cont_did <- function(yname,
     data = data,
     setup_pte_fun = setup_pte,
     subset_fun = two_by_two_subset,
-    attgt_fun = cic_attgt,
-    xformla = xformla,
+    attgt_fun = attgt_fun,
+    xformla = xformula,
     anticipation = anticipation,
     cband = cband,
     alp = alp,
     boot_type = boot_type,
     biters = biters,
     cl = cl,
-    ret_quantile = ret_quantile,
-    gt_type = gt_type
   )
 
   res
+}
+
+cont_did_acrt <- function(gt_data, xformla, ...) {
+  browser()
+  1 + 1
 }

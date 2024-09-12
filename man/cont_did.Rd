@@ -6,6 +6,7 @@
 \usage{
 cont_did(
   yname,
+  dname,
   tname,
   gname,
   idname,
@@ -13,6 +14,7 @@ cont_did(
   data,
   target_parameter = c("level", "slope"),
   aggregation = c("dose", "eventstudy", "none"),
+  treatment_type = c("continuous", "discrete"),
   allow_unbalanced_panel = FALSE,
   control_group = c("notyettreated", "nevertreated", "eventuallytreated"),
   anticipation = 0,
@@ -32,6 +34,17 @@ cont_did(
 }
 \arguments{
 \item{yname}{The name of the outcome variable}
+
+\item{dname}{The name of the treatment variable in the data.  The functionality of
+\code{cont_did} is different from the \code{did} package in that the treatment variable is
+the "amount" of the treatment in a particular period, rather than \code{gname} which
+gives the time period when a unit becomes treated.  Based on the \code{dname} variable,
+the \code{cont_did} package will "figure out" the treatment timing.
+
+To give an example, suppose that the treatment variable is called \code{D} in data frame
+\code{df}.  Furthermore, suppose there are 4 time periods, and a particular unit becomes
+treated in the time period 3 with dose 5.  Then, \code{dname="D"}, and for this unit
+\code{df$D} will be \code{c(0, 0, 5, 5)}.`}
 
 \item{tname}{The name of the column containing the time periods}
 

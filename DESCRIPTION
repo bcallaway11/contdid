@@ -1,9 +1,9 @@
 Package: contdid
 Title: Difference-in-Differences with a Continuous Treatment
 Version: 0.0.001
-Authors@R: c(person("Brantly", "Callaway", email = "brantly.callaway@uga.edu", role = c("aut", "cre")), 
-             person("Andrew", "Goodman-Bacon", email = "andrew@goodman-bacon.com", role = c("aut", "cre")),
-             person("Pedro H. C.", "Sant'Anna", email="pedro.h.santanna@emory.edu", role = c("aut", "cre")))
+Authors@R: c(person("Brantly", "Callaway", email = "brantly.callaway@uga.edu", role = c("aut", "cre")),
+             person("Andrew", "Goodman-Bacon", email = "andrew@goodman-bacon.com", role = c("aut")),
+             person("Pedro H. C.", "Sant'Anna", email="pedro.h.santanna@emory.edu", role = c("aut")))
 URL: https://bcallaway11.github.io/contdid/
 Description: Difference-in-differences with a continuous treatment and staggered treatment adoption.
 Depends:
