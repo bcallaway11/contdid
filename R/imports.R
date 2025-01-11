@@ -1,6 +1,8 @@
 #' @import stats
 #' @import utils
 #' @import BMisc
-#' @import pte
+#' @import ptetools
 #' @import checkmate
+#' @import splines2
+#' @importFrom tidyr %>%
 NULL

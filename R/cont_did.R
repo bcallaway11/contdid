@@ -17,6 +17,8 @@
 #'  treated in the time period 3 with dose 5.  Then, `dname="D"`, and for this unit
 #'  `df$D` will be `c(0, 0, 5, 5)`.`
 #' @inheritParams did::att_gt
+#' @param gname This is an optional name for the timing-group.  If it is not supplied, then
+#'  the function will attempt to create a timing-group variable based on the `dname`.
 #' @param target_parameter Two options are "level" and "slope".  In the first case, the function
 #'  will report level effects, i.e., ATT's.  In the second case, the function will report
 #'  slope effects, i.e., ACRT's
@@ -37,8 +39,8 @@
 #' @export
 cont_did <- function(yname,
                      dname,
+                     gname = NULL,
                      tname,
-                     gname,
                      idname,
                      xformula = ~1,
                      data,
@@ -52,6 +54,7 @@ cont_did <- function(yname,
                      alp = 0.05,
                      bstrap = FALSE,
                      cband = FALSE,
+                     boot_type = "empirical",
                      biters = 1000,
                      clustervars = NULL,
                      est_method = NULL,
@@ -62,9 +65,9 @@ cont_did <- function(yname,
                      ...) {
   # check argument formatting
   assert_data_frame(data)
-  assert_names(c(yname, gname, idname), subset.of = colnames(data))
+  assert_names(c(yname, dname, idname), subset.of = colnames(data))
   if (xformula != ~1) stop("covariates not currently supported, please use xformula=~1")
-  assert_choice(target_parameter, choices = c("level", "derivative"))
+  assert_choice(target_parameter, choices = c("level", "slope"))
   assert_choice(aggregation, choices = c("dose", "eventstudy", "none"))
   assert_choice(treatment_type, choices = c("continuous", "discrete"))
   if (aggregation == "none") stop("currently only support `dose` and `eventstudy` aggregations")
@@ -78,7 +81,7 @@ cont_did <- function(yname,
   if (!is.null(clustervars)) warning("clustered standard errors not tested yet, may not work")
   if (!is.null(est_method)) stop("covariates not supported yet, set est_method=NULL")
   assert_choice(base_period, choices = c("varying", "universal"))
-  if (!is.FALSE(pl)) stop("parallel processing not supported yet, set pl=FALSE")
+  if (!isFALSE(pl)) stop("parallel processing not supported yet, set pl=FALSE")
 
   # staggered treatment check
 
@@ -94,6 +97,12 @@ cont_did <- function(yname,
     attgt_fun <- pte::did_attgt
   }
 
+  # set up the timing group variable
+  if (is.null(gname)) {
+    data$.G <- BMisc::get_group(data, idname = idname, tname = tname, treatname = dname)
+    gname <- ".G"
+  }
+
   res <- pte2(
     yname = yname,
     gname = gname,
@@ -101,7 +110,7 @@ cont_did <- function(yname,
     idname = idname,
     data = data,
     setup_pte_fun = setup_pte,
-    subset_fun = two_by_two_subset,
+    subset_fun = cont_two_by_two_subset,
     attgt_fun = attgt_fun,
     xformla = xformula,
     anticipation = anticipation,
@@ -109,13 +118,136 @@ cont_did <- function(yname,
     alp = alp,
     boot_type = boot_type,
     biters = biters,
-    cl = cl,
+    cl = cores,
   )
 
   res
 }
 
-cont_did_acrt <- function(gt_data, xformla, ...) {
-  browser()
-  1 + 1
+cont_did_acrt <- function(gt_data, 
+                          xformla, 
+                          degree=1,
+                          num_knots=0,
+                          ...) {
+
+  gt_data$dy <- BMisc::get_first_difference(gt_data, "id", "Y", "period")
+  post_data <- subset(gt_data, name == "post")
+  dose <- post_data$D
+  dy <- post_data$dy
+
+  choose_knots_quantile <- function(X, num_knots) {
+    quantile(X, probs = seq(0, 1, length.out = num_knots + 2))[-c(1, num_knots + 2)]
+  }
+
+  # currently unused...
+  choose_knots_even <- function(X, num_knots) {
+    seq(min(X), max(X), length.out = num_knots + 2)[-c(1, num_knots + 2)]
+  }
+
+  knots <- choose_knots_quantile(dose[dose>0], num_knots)
+
+  bs <- splines2::bSpline(dose[dose>0], degree = degree, knots = knots) %>% as.data.frame()
+  colnames(bs) <- paste0("bs_", colnames(bs))
+  bs$dy <- dy[dose>0]
+
+  bs_reg <- lm(dy ~ . , data=bs)
+
+  dose_grid <- quantile(dose[dose>0], probs=seq(0,1,length.out=100))
+  bs_grid <- splines2::bSpline(dose_grid, degree = degree, knots = knots) %>% as.data.frame()
+  colnames(bs_grid) <- colnames(model.matrix(bs_reg))[-1]
+
+  att.d <- predict(bs_reg, newdata=bs_grid) - mean(dy[dose==0])  
+
+  # Compute derivative of B-spline basis
+  bs_deriv <- splines2::dbs(dose_grid, degree = degree, knots = knots)
+
+  # Compute derivative of E[Y|D]
+  bs_reg_coef <- coef(bs_reg)  # Coefficients from regression model
+  acrt.d <- bs_deriv %*% bs_reg_coef[-1, drop=FALSE]  # Exclude intercept term
+
+  att.overall <- mean(att.d)
+  acrt.overall <- mean(acrt.d)
+
+  attgt_noif(attgt=acrt.overall, extra_gt_returns=list(att.d=att.d, acrt.d=acrt.d, att.overall=att.overall))
+}
+
+#' @title cont_two_by_two_subset
+#'
+#' @description A function for computing a 2x2 subset of original data.
+#'  This function is adapted from `pte::two_by_two_subset` and allows
+#'  for the treatment to be continuous.
+#'  This is the subset with post treatment periods separately for the
+#'  treated group and comparison group and pre-treatment periods in the period
+#'  immediately before the treated group became treated.
+#'
+#' @param data the full dataset
+#' @param g the current group
+#' @param tp the current time period
+#' @param control_group whether to use "notyettreated" (default) or
+#'  "nevertreated"
+#' @param ... extra arguments to get the subset correct
+#'
+#' @return list that contains correct subset of data, \code{n1}
+#'  number of observations
+#'  in this subset, and \code{disidx} a vector of the correct ids for this
+#'  subset.
+#'
+#' @export
+cont_two_by_two_subset <- function(data,
+                                   g,
+                                   tp,
+                                   control_group = "notyettreated",
+                                   anticipation = 0,
+                                   base_period = "varying",
+                                   ...) {
+  # get the correct "base" period for this group
+  main.base.period <- g - anticipation - 1
+
+  #----------------------------------------------------
+  if (base_period == "varying") {
+    # if it's a pre-treatment time period (used for the
+    # pre-test, we need to adjust the base period)
+
+    # group not treated yet
+    if (tp < (g - anticipation)) {
+      # move to earlier period
+      # not going to include anticipation here
+      base.period <- tp - 1
+    } else {
+      # this is a post-treatment period
+      base.period <- main.base.period
+    }
+  } else {
+    base.period <- main.base.period
+  }
+  #----------------------------------------------------
+
+  #----------------------------------------------------
+  # collect the right subset of the data
+
+  # get group g and not-yet-treated group
+  if (control_group == "notyettreated") {
+    this.data <- subset(data, G == g | G > tp | G == 0)
+  } else {
+    # use never treated group
+    this.data <- subset(data, G == g | G == 0)
+  }
+
+  # get current period and base period data
+  this.data <- subset(this.data, period == tp | period == base.period)
+
+  # variable to keep track of pre/post periods
+  this.data$name <- ifelse(this.data$period == tp, "post", "pre")
+
+  # variable to indicate local treatment status
+  this.data$D <- this.data$D * (this.data$G == g)
+
+  # make this.data into gt_data_frame object
+  this.data <- gt_data_frame(this.data)
+
+  # number of observations used for this (g,t)
+  n1 <- length(unique(this.data$id))
+  disidx <- unique(data$id) %in% unique(this.data$id)
+
+  list(gt_data = this.data, n1 = n1, disidx = disidx)
 }

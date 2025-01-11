@@ -18,15 +18,15 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of contdid is to ...
+An R package for difference-in-differences with a continuous treatment.
 
 ## Installation
 
 You can install the development version of contdid from [GitHub](https://github.com/) with:
 
-``` r
-# install.packages("pak")
-pak::pak("bcallaway11/contdid")
+```{r}
+# install.packages("devtools")
+devtools::install_github("bcallaway11/contdid")
 ```
 
 ## Example
@@ -35,21 +35,34 @@ This is a basic example which shows you how to solve a common problem:
 
 ```{r example}
 library(contdid)
-## basic example code
+
+devtools::load_all("~/Dropbox/contdid")
+# Simulate data
+set.seed(123)
+sp <- did::reset.sim()
+df <- did::build_sim_dataset(sp)
+n <- length(unique(df$id))
+D <- runif(n, 0, 1)
+# make some untreated units
+df$D <- BMisc::time_invariant_to_panel(D, df, "id")
+# df$D <- df$D * (df$period >= df$G) * (df$G != 0)
+# df <- df[, c("id", "period", "Y", "D")]
+cd_res <- cont_did(
+  yname = "Y",
+  tname = "period",
+  idname = "id",
+  dname = "D",
+  data = df,
+  gname = "G",
+  target_parameter = "slope",
+  aggregation = "dose",
+  treatment_type = "continuous",
+  control_group = "notyettreated",
+  biters = 10,
+  cl = 10,
+  knots = 3,
+  degree = 3
+)
+
+ggpte(cd_res)
 ```
-
-What is special about using `README.Rmd` instead of just `README.md`? You can include R chunks like so:
-
-```{r cars}
-summary(cars)
-```
-
-You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this.
-
-You can also embed plots, for example:
-
-```{r pressure, echo = FALSE}
-plot(pressure)
-```
-
-In that case, don't forget to commit and push the resulting figure files, so they display on GitHub and CRAN.

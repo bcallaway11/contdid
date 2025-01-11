@@ -18,5 +18,11 @@ Useful links:
 \author{
 \strong{Maintainer}: Brantly Callaway \email{brantly.callaway@uga.edu}
 
+Authors:
+\itemize{
+  \item Andrew Goodman-Bacon \email{andrew@goodman-bacon.com}
+  \item Pedro H. C. Sant'Anna \email{pedro.h.santanna@emory.edu}
+}
+
 }
 \keyword{internal}

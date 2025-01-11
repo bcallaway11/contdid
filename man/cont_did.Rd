@@ -7,8 +7,8 @@
 cont_did(
   yname,
   dname,
+  gname = NULL,
   tname,
-  gname,
   idname,
   xformula = ~1,
   data,
@@ -22,6 +22,7 @@ cont_did(
   alp = 0.05,
   bstrap = FALSE,
   cband = FALSE,
+  boot_type = "empirical",
   biters = 1000,
   clustervars = NULL,
   est_method = NULL,
@@ -46,13 +47,10 @@ To give an example, suppose that the treatment variable is called \code{D} in da
 treated in the time period 3 with dose 5.  Then, \code{dname="D"}, and for this unit
 \code{df$D} will be \code{c(0, 0, 5, 5)}.`}
 
-\item{tname}{The name of the column containing the time periods}
+\item{gname}{This is an optional name for the timing-group.  If it is not supplied, then
+the function will attempt to create a timing-group variable based on the \code{dname}.}
 
-\item{gname}{The name of the variable in \code{data} that
-contains the first period when a particular observation is treated.
-This should be a positive number for all observations in treated groups.
-It defines which "group" a unit belongs to.  It should be 0 for units
-in the untreated group.}
+\item{tname}{The name of the column containing the time periods}
 
 \item{idname}{The individual (cross-sectional unit) id name}
 
