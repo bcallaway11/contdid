@@ -66,5 +66,5 @@ cd_res <- cont_did(
 )
 
 
-ggpte(cd_res)
+# ggpte(cd_res)
 ```

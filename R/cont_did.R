@@ -192,7 +192,38 @@ cont_did_acrt <- function(
   att.overall <- mean(att.d)
   acrt.overall <- mean(acrt.d)
 
-  attgt_noif(attgt = acrt.overall, extra_gt_returns = list(att.d = att.d, acrt.d = acrt.d, att.overall = att.overall))
+  browser()
+
+  # capture components of influence function
+  # for inference later
+  Xe <- sandwich::estfun(bs_reg)
+  bread <- sandwich::bread(bs_reg)
+  # confirmed that this is the same as following
+  # Xe <- sandwich::estfun(bs_reg)
+  # n <- nrow(Xe)
+  # M <- t(Xe) %*% Xe / n
+  # X <- cbind(1, as.matrix(bs[, -ncol(bs)]))
+  # B <- solve(t(X) %*% X / n)
+  # Bread <- sandwich::bread(bs_reg)
+  # Meat <- sandwich::meat(bs_reg)
+  # sandwich::vcovHC(bs_reg, type = "HC0")
+  # sqrt(diag(solve(t(X) %*% X) %*% M %*% solve(t(X) %*% X))) / sqrt(n)
+  # Bread %*% Meat %*% Bread
+  # B %*% M %*% B
+
+  attgt_if(
+    attgt = acrt.overall,
+    inf_func = rep(NA, nrow(Xe)),
+    extra_gt_returns = list(
+      att.d = att.d,
+      acrt.d = acrt.d,
+      att.overall = att.overall,
+      acrt.overall = acrt.overall,
+      bet = bs_reg_coef,
+      bread = bread,
+      Xe = Xe
+    )
+  )
 }
 
 #' @title cont_two_by_two_subset
