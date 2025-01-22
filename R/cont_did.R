@@ -47,6 +47,8 @@ cont_did <- function(yname,
                      target_parameter = c("level", "slope"),
                      aggregation = c("dose", "eventstudy", "none"),
                      treatment_type = c("continuous", "discrete"),
+                     degree = 1,
+                     num_knots = 0,
                      allow_unbalanced_panel = FALSE,
                      control_group = c("notyettreated", "nevertreated", "eventuallytreated"),
                      anticipation = 0,
@@ -83,18 +85,31 @@ cont_did <- function(yname,
   assert_choice(base_period, choices = c("varying", "universal"))
   if (!isFALSE(pl)) stop("parallel processing not supported yet, set pl=FALSE")
 
-  # staggered treatment check
+  # TODO: checks that dose is constant over time and that treatment is staggered
+  # check for balanced panel data
 
   if (treatment_type == "discrete") {
     stop("discrete treatment not supported yet")
   }
 
-  if (treatment_type == "continuous" && aggregation == "dose") {
+  if (treatment_type == "continuous" && aggregation == "dose" && target_parameter == "slope") {
     attgt_fun <- cont_did_acrt
+    gt_type <- "dose"
   }
 
-  if (treatment_type == "continuous" && aggregation == "eventstudy") {
-    attgt_fun <- pte::did_attgt
+  if (treatment_type == "continuous" && aggregation == "dose" && target_parameter == "level") {
+    attgt_fun <- cont_did_att
+    gt_type <- "dose"
+  }
+
+  if (treatment_type == "continuous" && aggregation == "eventstudy" && target_parameter == "slope") {
+    attgt_fun <- cont_did_acrt
+    gt_type <- "att"
+  }
+
+  if (treatment_type == "continuous" && aggregation == "eventstudy" && target_parameter == "level") {
+    attgt_fun <- ptetools::did_attgt
+    gt_type <- "att"
   }
 
   # set up the timing group variable
@@ -109,66 +124,75 @@ cont_did <- function(yname,
     tname = tname,
     idname = idname,
     data = data,
-    setup_pte_fun = setup_pte,
+    setup_pte_fun = setup_pte_cont,
     subset_fun = cont_two_by_two_subset,
     attgt_fun = attgt_fun,
     xformla = xformula,
     anticipation = anticipation,
+    gt_type = gt_type,
     cband = cband,
     alp = alp,
     boot_type = boot_type,
     biters = biters,
     cl = cores,
+    dname = dname,
+    degree = degree,
+    num_knots = num_knots
   )
 
   res
 }
 
-cont_did_acrt <- function(gt_data, 
-                          xformla, 
-                          degree=1,
-                          num_knots=0,
-                          ...) {
-
+cont_did_acrt <- function(
+    gt_data,
+    dname,
+    degree = 1,
+    knots = numeric(0),
+    ...) {
   gt_data$dy <- BMisc::get_first_difference(gt_data, "id", "Y", "period")
   post_data <- subset(gt_data, name == "post")
   dose <- post_data$D
   dy <- post_data$dy
 
-  choose_knots_quantile <- function(X, num_knots) {
-    quantile(X, probs = seq(0, 1, length.out = num_knots + 2))[-c(1, num_knots + 2)]
+  # if they were previously saved in shared_env, recover calculated knots
+  if (!is.null(shared_env$knots)) {
+    knots <- shared_env$knots
   }
 
-  # currently unused...
-  choose_knots_even <- function(X, num_knots) {
-    seq(min(X), max(X), length.out = num_knots + 2)[-c(1, num_knots + 2)]
-  }
+  # choose_knots_quantile <- function(X, num_knots) {
+  #   quantile(X, probs = seq(0, 1, length.out = num_knots + 2))[-c(1, num_knots + 2)]
+  # }
 
-  knots <- choose_knots_quantile(dose[dose>0], num_knots)
+  # # currently unused...
+  # choose_knots_even <- function(X, num_knots) {
+  #   seq(min(X), max(X), length.out = num_knots + 2)[-c(1, num_knots + 2)]
+  # }
 
-  bs <- splines2::bSpline(dose[dose>0], degree = degree, knots = knots) %>% as.data.frame()
+  # knots <- choose_knots_quantile(dose[dose > 0], num_knots)
+
+  bs <- splines2::bSpline(dose[dose > 0], degree = degree, knots = knots) %>% as.data.frame()
   colnames(bs) <- paste0("bs_", colnames(bs))
-  bs$dy <- dy[dose>0]
+  bs$dy <- dy[dose > 0]
 
-  bs_reg <- lm(dy ~ . , data=bs)
+  bs_reg <- lm(dy ~ ., data = bs)
 
-  dose_grid <- quantile(dose[dose>0], probs=seq(0,1,length.out=100))
+  dose_grid <- quantile(dose[dose > 0], probs = seq(0, 1, length.out = 100))
   bs_grid <- splines2::bSpline(dose_grid, degree = degree, knots = knots) %>% as.data.frame()
   colnames(bs_grid) <- colnames(model.matrix(bs_reg))[-1]
 
-  att.d <- predict(bs_reg, newdata=bs_grid) - mean(dy[dose==0])  
+  att.d <- predict(bs_reg, newdata = bs_grid) - mean(dy[dose == 0])
 
   # Compute derivative of B-spline basis
   bs_deriv <- splines2::dbs(dose_grid, degree = degree, knots = knots)
 
   # Compute derivative of E[Y|D]
-  bs_reg_coef <- coef(bs_reg)  # Coefficients from regression model
-  acrt.d <- bs_deriv %*% bs_reg_coef[-1, drop=FALSE]  # Exclude intercept term
+  bs_reg_coef <- coef(bs_reg) # Coefficients from regression model
+  acrt.d <- bs_deriv %*% bs_reg_coef[-1, drop = FALSE] # Exclude intercept term
 
   att.overall <- mean(att.d)
   acrt.overall <- mean(acrt.d)
 
-  attgt_noif(attgt=acrt.overall, extra_gt_returns=list(att.d=att.d, acrt.d=acrt.d, att.overall=att.overall))
+  attgt_noif(attgt = acrt.overall, extra_gt_returns = list(att.d = att.d, acrt.d = acrt.d, att.overall = att.overall))
 }
 
 #' @title cont_two_by_two_subset

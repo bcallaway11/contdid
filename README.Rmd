@@ -37,6 +37,7 @@ This is a basic example which shows you how to solve a common problem:
 library(contdid)
 
 devtools::load_all("~/Dropbox/contdid")
+devtools::load_all("~/Dropbox/ptetools")
 # Simulate data
 set.seed(123)
 sp <- did::reset.sim()
@@ -60,9 +61,10 @@ cd_res <- cont_did(
   control_group = "notyettreated",
   biters = 10,
   cl = 10,
-  knots = 3,
+  num_knots = 3,
   degree = 3
 )
+
 
 ggpte(cd_res)
 ```

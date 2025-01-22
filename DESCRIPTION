@@ -15,7 +15,8 @@ Imports:
     BMisc (>= 1.4.7),
     ptetools,
     checkmate,
-    splines2
+    splines2,
+    tidyr
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 VignetteBuilder: knitr
