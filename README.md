@@ -22,7 +22,8 @@ library(contdid)
 
 ## Example
 
-This is a basic example which shows you how to solve a common problem:
+To start with, we will simulate some data, where the continuous
+treatment `D` has no affect on the outcome.
 
 ``` r
 # Simulate data
@@ -33,6 +34,69 @@ n <- length(unique(df$id))
 D <- runif(n, 0, 1)
 # add treatment variable
 df$D <- BMisc::time_invariant_to_panel(D, df, "id")
+```
+
+The following code illustrates how to estimate `ATT(d)` and `ACRT(d)`
+using the `cont_did` function, provided by the package.
+
+The interface is basically the same as for the `did` package and for
+other packages that rely on the `ptetools` backend. The main additional
+things that need to be provided to the function are the name of the
+continuous treatment variable, which should be passed through the
+`dname` argument.
+
+The `cont_did` function expects the continuous treatment variable to
+behave in certain ways:
+
+1.  It needs to be time-invariant.
+
+2.  It should be set to its time-invariant value in pre-treatment
+    periods. This is just a convention of the package, but, in
+    particular, you should not have the treatment variable coded as
+    being 0 in pre-treatment periods.
+
+3.  For units that don’t participate in the treatment in any time
+    period, the treatment variable just needs to be time-invariant. In
+    some applications, e.g., the continuous treatment variable may be
+    defined for units that don’t actually participate in the treatment.
+    In other applications, it may not be defined for units that do not
+    participate in the treatment. The function behaves the same way in
+    either case.
+
+Next, the other important parameters are `target_parameter`,
+`aggregation`, and `treatment_type`:
+
+- `target_parameter` can either be “level” or “slope”. If “level”, then
+  the function will calculate `ATT` parameters. If set to be “slope”,
+  then the function will calculate `ACRT` parameters—these are causal
+  response parameters that are derivatives of the `ATT` parameters. Our
+  paper @callaway-goodman-santanna-2024 points out some complications
+  for interpreting these derivative type parameters under the most
+  commonly invoked version of the parallel trends assumption.
+
+- `aggregation` can either by “eventstudy” or “dose”. For “eventstudy”,
+  depending on the value of the `target_parameter` argument, the
+  function will provide either the average `ATT` across different event
+  times or the average `ACRT` across different event times. For “dose”,
+  the function will average across all time periods and report average
+  affects across different values of the continuous treatment. For the
+  “dose” aggregation, results are calculated for both `ATT` and `ACRT`
+  and can be displayed by providing different arguments to plotting
+  functions (see example below).
+
+- `treatment_type` can either be “continuous” or “discrete”. Currently
+  only “continuous” is supported. In this case, the code proceeds as if
+  the treatment really is continuous. The estimate are computed
+  nonparametrically using B-splines. The user can control the number of
+  knots and the degree of the B-splines using the `num_knots` and
+  `degree` arguments. The defaults are `num_knots=0` and `degree=1`
+  which amounts to estimating `ATT(d)` by estimating a linear model in
+  the continuous treatment among treated units and subtracting the
+  average outcome among the comparison units.
+
+### Dose Aggregation
+
+``` r
 cd_res <- cont_did(
   yname = "Y",
   tname = "period",
@@ -45,14 +109,83 @@ cd_res <- cont_did(
   treatment_type = "continuous",
   control_group = "notyettreated",
   biters = 100,
-  #  cl = 10,
   cband = TRUE,
   num_knots = 1,
   degree = 3,
-  # dvals = seq(.4, .6, length.out = 20)
 )
 
+summary(cd_res)
+#>                 Length Class      Mode   
+#> dose                90 -none-     numeric
+#> att.d               90 -none-     numeric
+#> att.d_se            90 -none-     numeric
+#> att.d_crit.val       1 -none-     numeric
+#> att.d_inffunc   362160 -none-     numeric
+#> acrt.d              90 -none-     numeric
+#> acrt.d_se           90 -none-     numeric
+#> acrt.d_crit.val      1 -none-     numeric
+#> acrt.d_inffunc  362160 -none-     numeric
+#> pte_params          23 pte_params list   
+#> call                 0 -none-     NULL
+ggcont_did(cd_res, type = "att")
+```
+
+<img src="man/figures/README-unnamed-chunk-5-1.png" width="100%" />
+
+``` r
 ggcont_did(cd_res, type = "acrt")
 ```
 
-<img src="man/figures/README-unnamed-chunk-4-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-5-2.png" width="100%" />
+
+### Event Study Aggregations
+
+An event study aggregation for `ATT`
+
+``` r
+cd_res_es_level <- cont_did(
+  yname = "Y",
+  tname = "period",
+  idname = "id",
+  dname = "D",
+  data = df,
+  gname = "G",
+  target_parameter = "level",
+  aggregation = "eventstudy",
+  treatment_type = "continuous",
+  control_group = "notyettreated",
+  biters = 100,
+  cband = TRUE,
+  num_knots = 1,
+  degree = 3,
+)
+
+ggcont_did(cd_res_es_level)
+```
+
+<img src="man/figures/README-unnamed-chunk-6-1.png" width="100%" />
+
+And an event study aggregation for `ACRT`
+
+``` r
+cd_res_es_slope <- cont_did(
+  yname = "Y",
+  tname = "period",
+  idname = "id",
+  dname = "D",
+  data = df,
+  gname = "G",
+  target_parameter = "level",
+  aggregation = "eventstudy",
+  treatment_type = "continuous",
+  control_group = "notyettreated",
+  biters = 100,
+  cband = TRUE,
+  num_knots = 1,
+  degree = 3,
+)
+
+ggcont_did(cd_res_es_slope)
+```
+
+<img src="man/figures/README-unnamed-chunk-7-1.png" width="100%" />
