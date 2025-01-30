@@ -20,6 +20,10 @@ setup_pte_cont <- function(yname,
                            tname,
                            idname,
                            data,
+                           xformula = ~1,
+                           target_parameter,
+                           aggregation,
+                           treatment_type,
                            required_pre_periods = 1,
                            anticipation = 0,
                            base_period = "varying",
@@ -44,6 +48,7 @@ setup_pte_cont <- function(yname,
         tname = tname,
         idname = idname,
         data = data,
+        xformula = xformula,
         cband = cband,
         alp = alp,
         boot_type = boot_type,
@@ -57,10 +62,6 @@ setup_pte_cont <- function(yname,
         cl = cl,
         ...
     )
-
-    # dname <- list(...)$dname
-    # degree <- list(...)$degree
-    # num_knots <- list(...)$num_knots
 
     first_period <- min(data[[tname]])
     first_period_data <- data[data[[tname]] == first_period, ]
@@ -76,6 +77,10 @@ setup_pte_cont <- function(yname,
     ptep$num_knots <- num_knots
     ptep$knots <- knots
     ptep$dvals <- dvals
+
+    ptep$target_parameter <- target_parameter
+    ptep$aggregation <- aggregation
+    ptep$treatment_type <- treatment_type
 
     shared_env$knots <- knots
     shared_env$dvals <- dvals

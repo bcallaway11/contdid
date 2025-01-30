@@ -73,7 +73,7 @@ Next, the other important parameters are `target_parameter`, `aggregation`, and 
 
 ### Dose Aggregation
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 cd_res <- cont_did(
   yname = "Y",
   tname = "period",
@@ -101,7 +101,7 @@ ggcont_did(cd_res, type = "acrt")
 
 An event study aggregation for `ATT`
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 cd_res_es_level <- cont_did(
   yname = "Y",
   tname = "period",
@@ -119,12 +119,13 @@ cd_res_es_level <- cont_did(
   degree = 3,
 )
 
+summary(cd_res_es_level)
 ggcont_did(cd_res_es_level)
 ```
 
 And an event study aggregation for `ACRT`
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 cd_res_es_slope <- cont_did(
   yname = "Y",
   tname = "period",
@@ -132,7 +133,7 @@ cd_res_es_slope <- cont_did(
   dname = "D",
   data = df,
   gname = "G",
-  target_parameter = "level",
+  target_parameter = "slope",
   aggregation = "eventstudy",
   treatment_type = "continuous",
   control_group = "notyettreated",
@@ -142,5 +143,6 @@ cd_res_es_slope <- cont_did(
   degree = 3,
 )
 
+summary(cd_res_es_slope)
 ggcont_did(cd_res_es_slope)
 ```

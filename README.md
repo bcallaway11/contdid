@@ -125,7 +125,7 @@ summary(cd_res)
 #> acrt.d_se           90 -none-     numeric
 #> acrt.d_crit.val      1 -none-     numeric
 #> acrt.d_inffunc  362160 -none-     numeric
-#> pte_params          23 pte_params list   
+#> pte_params          26 pte_params list   
 #> call                 0 -none-     NULL
 ggcont_did(cd_res, type = "att")
 ```
@@ -160,6 +160,22 @@ cd_res_es_level <- cont_did(
   degree = 3,
 )
 
+summary(cd_res_es_level)
+#> 
+#> Overall ATT:  
+#>     ATT    Std. Error     [ 95%  Conf. Int.]  
+#>  0.9862        0.0544     0.8795      1.0929 *
+#> 
+#> 
+#> Dynamic Effects:
+#>  Event Time Estimate Std. Error  [95%  Conf. Band]  
+#>          -2   0.1867     0.0672 0.0316      0.3419 *
+#>          -1   0.1614     0.0510 0.0438      0.2790 *
+#>           0   0.9258     0.0413 0.8305      1.0212 *
+#>           1   0.9808     0.0591 0.8444      1.1171 *
+#>           2   1.1012     0.1151 0.8356      1.3669 *
+#> ---
+#> Signif. codes: `*' confidence band does not cover 0
 ggcont_did(cd_res_es_level)
 ```
 
@@ -175,7 +191,7 @@ cd_res_es_slope <- cont_did(
   dname = "D",
   data = df,
   gname = "G",
-  target_parameter = "level",
+  target_parameter = "slope",
   aggregation = "eventstudy",
   treatment_type = "continuous",
   control_group = "notyettreated",
@@ -185,6 +201,22 @@ cd_res_es_slope <- cont_did(
   degree = 3,
 )
 
+summary(cd_res_es_slope)
+#> 
+#> Overall ATT:  
+#>      ATT    Std. Error     [ 95%  Conf. Int.]  
+#>  -0.3625        0.1075    -0.5732     -0.1517 *
+#> 
+#> 
+#> Dynamic Effects:
+#>  Event Time Estimate Std. Error   [95%  Conf. Band]  
+#>          -2  -0.3583     0.1038 -0.5969     -0.1197 *
+#>          -1  -0.1641     0.1008 -0.3957      0.0674  
+#>           0  -0.2125     0.0711 -0.3760     -0.0491 *
+#>           1  -0.6557     0.1181 -0.9271     -0.3844 *
+#>           2  -1.0936     0.3533 -1.9054     -0.2818 *
+#> ---
+#> Signif. codes: `*' confidence band does not cover 0
 ggcont_did(cd_res_es_slope)
 ```
 
