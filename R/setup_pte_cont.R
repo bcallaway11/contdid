@@ -4,9 +4,15 @@
 #'  several different variables that are needed when there is a
 #'  continuous treatment.
 #'
-#' @inheritParams ptetools::pte_params
+#' @inheritParams ptetools::setup_pte
 #'
-#' #' @return \code{pte_params} object
+#' @param dvals an optional argument specifying which values of the
+#'  treatment to evaluate ATT(d) and/or ACRT(d).  If no values are
+#'  supplied, then the default behavior is to set
+#'  `dvals` to be the 1st to 99th percentiles of the dose among
+#'  units that experience any positive dose.
+#'
+#' @return \code{pte_params} object
 #'
 #' @export
 setup_pte_cont <- function(yname,
@@ -26,6 +32,7 @@ setup_pte_cont <- function(yname,
                            biters = 100,
                            cl = 1,
                            dname,
+                           dvals = NULL,
                            degree = 1,
                            num_knots = 0,
                            ...) {
@@ -60,13 +67,18 @@ setup_pte_cont <- function(yname,
     dose <- first_period_data[[dname]]
 
     knots <- choose_knots_quantile(dose[dose > 0], num_knots)
+    if (is.null(dvals)) {
+        dvals <- quantile(dose[dose > 0], probs = seq(.1, .99, .01))
+    }
 
     ptep$dname <- dname
     ptep$degree <- degree
     ptep$num_knots <- num_knots
     ptep$knots <- knots
+    ptep$dvals <- dvals
 
     shared_env$knots <- knots
+    shared_env$dvals <- dvals
 
     ptep
 }

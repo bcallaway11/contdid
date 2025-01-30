@@ -15,6 +15,9 @@ cont_did(
   target_parameter = c("level", "slope"),
   aggregation = c("dose", "eventstudy", "none"),
   treatment_type = c("continuous", "discrete"),
+  dvals = NULL,
+  degree = 1,
+  num_knots = 0,
   allow_unbalanced_panel = FALSE,
   control_group = c("notyettreated", "nevertreated", "eventuallytreated"),
   anticipation = 0,
@@ -28,8 +31,7 @@ cont_did(
   est_method = NULL,
   base_period = "varying",
   print_details = FALSE,
-  pl = FALSE,
-  cores = 1,
+  cl = 1,
   ...
 )
 }
@@ -168,10 +170,6 @@ extra estimate in an earlier period.}
 
 \item{print_details}{Whether or not to show details/progress of computations.
 Default is \code{FALSE}.}
-
-\item{pl}{Whether or not to use parallel processing}
-
-\item{cores}{The number of cores to use for parallel processing}
 }
 \value{
 cont_did_obj

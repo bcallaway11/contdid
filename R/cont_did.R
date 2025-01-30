@@ -47,6 +47,7 @@ cont_did <- function(yname,
                      target_parameter = c("level", "slope"),
                      aggregation = c("dose", "eventstudy", "none"),
                      treatment_type = c("continuous", "discrete"),
+                     dvals = NULL,
                      degree = 1,
                      num_knots = 0,
                      allow_unbalanced_panel = FALSE,
@@ -62,8 +63,7 @@ cont_did <- function(yname,
                      est_method = NULL,
                      base_period = "varying",
                      print_details = FALSE,
-                     pl = FALSE,
-                     cores = 1,
+                     cl = 1,
                      ...) {
   # check argument formatting
   assert_data_frame(data)
@@ -78,12 +78,9 @@ cont_did <- function(yname,
   if (anticipation != 0) warning("anticipation not tested yet, may not work")
   if (!is.null(weightsname)) warning("sampling weights not tested yet, may not work")
   assert_numeric(alp)
-  if (!isFALSE(bstrap)) stop("bootstrap not currently supported")
-  if (!isFALSE(cband)) stop("uniform confidence band not currently supported")
-  if (!is.null(clustervars)) warning("clustered standard errors not tested yet, may not work")
+  if (!is.null(clustervars)) warning("two-way clustering not currently supported")
   if (!is.null(est_method)) stop("covariates not supported yet, set est_method=NULL")
   assert_choice(base_period, choices = c("varying", "universal"))
-  if (!isFALSE(pl)) stop("parallel processing not supported yet, set pl=FALSE")
 
   # TODO: checks that dose is constant over time and that treatment is staggered
   # check for balanced panel data
@@ -134,10 +131,11 @@ cont_did <- function(yname,
     alp = alp,
     boot_type = boot_type,
     biters = biters,
-    cl = cores,
+    cl = cl,
     dname = dname,
     degree = degree,
-    num_knots = num_knots
+    num_knots = num_knots,
+    dvals = dvals
   )
 
   res
@@ -145,7 +143,7 @@ cont_did <- function(yname,
 
 cont_did_acrt <- function(
     gt_data,
-    dname,
+    dvals = NULL,
     degree = 1,
     knots = numeric(0),
     ...) {
@@ -157,18 +155,8 @@ cont_did_acrt <- function(
   # if they were previously saved in shared_env, recover calculated knots
   if (!is.null(shared_env$knots)) {
     knots <- shared_env$knots
+    dvals <- shared_env$dvals
   }
-
-  # choose_knots_quantile <- function(X, num_knots) {
-  #   quantile(X, probs = seq(0, 1, length.out = num_knots + 2))[-c(1, num_knots + 2)]
-  # }
-
-  # # currently unused...
-  # choose_knots_even <- function(X, num_knots) {
-  #   seq(min(X), max(X), length.out = num_knots + 2)[-c(1, num_knots + 2)]
-  # }
-
-  # knots <- choose_knots_quantile(dose[dose > 0], num_knots)
 
   bs <- splines2::bSpline(dose[dose > 0], degree = degree, knots = knots) %>% as.data.frame()
   colnames(bs) <- paste0("bs_", colnames(bs))
@@ -176,23 +164,28 @@ cont_did_acrt <- function(
 
   bs_reg <- lm(dy ~ ., data = bs)
 
-  dose_grid <- quantile(dose[dose > 0], probs = seq(0, 1, length.out = 100))
-  bs_grid <- splines2::bSpline(dose_grid, degree = degree, knots = knots) %>% as.data.frame()
+  # dose_grid <- quantile(dose[dose > 0], probs = seq(0, 1, length.out = 100))
+  bs_grid <- splines2::bSpline(dvals, degree = degree, knots = knots) %>% as.data.frame()
   colnames(bs_grid) <- colnames(model.matrix(bs_reg))[-1]
 
   att.d <- predict(bs_reg, newdata = bs_grid) - mean(dy[dose == 0])
 
   # Compute derivative of B-spline basis
-  bs_deriv <- splines2::dbs(dose_grid, degree = degree, knots = knots)
+  bs_deriv <- splines2::dbs(dvals, degree = degree, knots = knots)
 
   # Compute derivative of E[Y|D]
   bs_reg_coef <- coef(bs_reg) # Coefficients from regression model
   acrt.d <- bs_deriv %*% bs_reg_coef[-1, drop = FALSE] # Exclude intercept term
+  acrt.d <- as.numeric(acrt.d)
 
-  att.overall <- mean(att.d)
-  acrt.overall <- mean(acrt.d)
-
-  browser()
+  # previous results just plug in different values of D
+  # here average across the distribution of the dose to
+  # get average treatment effect parameters
+  bs_grid2 <- splines2::bSpline(dose[dose > 0], degree = degree, knots = knots) %>% as.data.frame()
+  colnames(bs_grid2) <- colnames(model.matrix(bs_reg))[-1]
+  att.overall <- mean(predict(bs_reg, newdata = bs_grid2)) - mean(dy[dose == 0])
+  bs_deriv2 <- splines2::dbs(dose[dose > 0], degree = degree, knots = knots)
+  acrt.overall <- mean(bs_deriv2 %*% bs_reg_coef[-1, drop = FALSE])
 
   # capture components of influence function
   # for inference later
@@ -204,16 +197,30 @@ cont_did_acrt <- function(
   # M <- t(Xe) %*% Xe / n
   # X <- cbind(1, as.matrix(bs[, -ncol(bs)]))
   # B <- solve(t(X) %*% X / n)
-  # Bread <- sandwich::bread(bs_reg)
+  # Bread <- sandwich::bread(bs_reg) # note B==Bread
   # Meat <- sandwich::meat(bs_reg)
   # sandwich::vcovHC(bs_reg, type = "HC0")
   # sqrt(diag(solve(t(X) %*% X) %*% M %*% solve(t(X) %*% X))) / sqrt(n)
   # Bread %*% Meat %*% Bread
   # B %*% M %*% B
 
+  # return influence function for ACRT^o, but also return components
+  # to compute uniform confidence bands for ATT(d) and ACRT(d)
+  # to be used outside this function
+
+  # first component come from "knowing" the regression coefficients
+  inffunc1 <- bs_deriv2 %*% bs_reg_coef[-1, drop = FALSE] - acrt.overall
+
+  # second component comes from having estimated the regression coefficients
+  inffunc2 <- Xe %*% bread %*% as.matrix(c(0, colMeans(bs_deriv2))) # augment with 0 for intercept spot
+
+  # untreated don't contribute to influence function for ACRT
+  inffunc <- rep(0, nrow(post_data))
+  inffunc[dose > 0] <- as.numeric(inffunc1 + inffunc2)
+
   attgt_if(
     attgt = acrt.overall,
-    inf_func = rep(NA, nrow(Xe)),
+    inf_func = inffunc,
     extra_gt_returns = list(
       att.d = att.d,
       acrt.d = acrt.d,

@@ -24,30 +24,32 @@ An R package for difference-in-differences with a continuous treatment.
 
 You can install the development version of contdid from [GitHub](https://github.com/) with:
 
-```{r}
+```{r, eval=FALSE}
 # install.packages("devtools")
 devtools::install_github("bcallaway11/contdid")
+
+library(contdid)
+```
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+devtools::load_all("~/Dropbox/BMisc")
+devtools::load_all("~/Dropbox/ptetools")
+devtools::load_all("~/Dropbox/contdid")
 ```
 
 ## Example
 
 This is a basic example which shows you how to solve a common problem:
 
-```{r example}
-library(contdid)
-
-devtools::load_all("~/Dropbox/contdid")
-devtools::load_all("~/Dropbox/ptetools")
+```{r}
 # Simulate data
 set.seed(123)
 sp <- did::reset.sim()
 df <- did::build_sim_dataset(sp)
 n <- length(unique(df$id))
 D <- runif(n, 0, 1)
-# make some untreated units
+# add treatment variable
 df$D <- BMisc::time_invariant_to_panel(D, df, "id")
-# df$D <- df$D * (df$period >= df$G) * (df$G != 0)
-# df <- df[, c("id", "period", "Y", "D")]
 cd_res <- cont_did(
   yname = "Y",
   tname = "period",
@@ -59,12 +61,13 @@ cd_res <- cont_did(
   aggregation = "dose",
   treatment_type = "continuous",
   control_group = "notyettreated",
-  biters = 10,
-  cl = 10,
-  num_knots = 3,
-  degree = 3
+  biters = 100,
+  #  cl = 10,
+  cband = TRUE,
+  num_knots = 1,
+  degree = 3,
+  # dvals = seq(.4, .6, length.out = 20)
 )
 
-
-# ggpte(cd_res)
+ggcont_did(cd_res, type = "acrt")
 ```
