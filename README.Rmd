@@ -44,6 +44,7 @@ To start with, we will simulate some data, where the continuous treatment `D` ha
 # Simulate data
 set.seed(123)
 sp <- did::reset.sim()
+sp$n <- 10000
 df <- did::build_sim_dataset(sp)
 n <- length(unique(df$id))
 D <- runif(n, 0, 1)
