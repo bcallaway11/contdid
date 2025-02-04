@@ -2,7 +2,7 @@
 % Please edit documentation in R/cont_did.R
 \name{cont_did}
 \alias{cont_did}
-\title{Difference-in-diffrences with a Continuous Treatment}
+\title{Difference-in-differences with a Continuous Treatment}
 \usage{
 cont_did(
   yname,
@@ -89,7 +89,7 @@ nonparametric or flexible parametric estimation, a good option is to set
 \code{degree=3}.}
 
 \item{num_knots}{The number of knots to include for the B-Spline.  The default is 0
-so that the spline is global.  There is a bias-variance tradeoff for inlcluding
+so that the spline is global.  There is a bias-variance tradeoff for including
 more or less knots.}
 
 \item{allow_unbalanced_panel}{Whether or not function should

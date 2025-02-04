@@ -1,4 +1,4 @@
-#' @title Difference-in-diffrences with a Continuous Treatment
+#' @title Difference-in-differences with a Continuous Treatment
 #'
 #' @description A function for difference-in-differences with a continuous treatment in a
 #'  staggered treatment adoption setting.
@@ -49,7 +49,7 @@
 #'  `degree=3`.
 #'
 #' @param num_knots The number of knots to include for the B-Spline.  The default is 0
-#'  so that the spline is global.  There is a bias-variance tradeoff for inlcluding
+#'  so that the spline is global.  There is a bias-variance tradeoff for including
 #'  more or less knots.
 #'
 #' @return cont_did_obj
