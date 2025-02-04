@@ -2,7 +2,7 @@
 % Please edit documentation in R/cont_did.R
 \name{cont_did}
 \alias{cont_did}
-\title{cont_did}
+\title{Difference-in-diffrences with a Continuous Treatment}
 \usage{
 cont_did(
   yname,
@@ -41,20 +41,20 @@ cont_did(
 \item{dname}{The name of the treatment variable in the data.  The functionality of
 \code{cont_did} is different from the \code{did} package in that the treatment variable is
 the "amount" of the treatment in a particular period, rather than \code{gname} which
-gives the time period when a unit becomes treated.  Based on the \code{dname} variable,
-the \code{cont_did} package will "figure out" the treatment timing.
+gives the time period when a unit becomes treated.  The \code{dname} variable should,
+for a particular unit, be constant across time periods---even in pre-treatment periods.
+For units that never participate in the treatment, the amount of the treatment may
+not be defined in some applications---it is ignored in this function.}
 
-To give an example, suppose that the treatment variable is called \code{D} in data frame
-\code{df}.  Furthermore, suppose there are 4 time periods, and a particular unit becomes
-treated in the time period 3 with dose 5.  Then, \code{dname="D"}, and for this unit
-\code{df$D} will be \code{c(0, 0, 5, 5)}.`}
-
-\item{gname}{This is an optional name for the timing-group.  If it is not supplied, then
-the function will attempt to create a timing-group variable based on the \code{dname}.}
+\item{gname}{The name of the timing-group variable, i.e., when treatment starts for
+a particular unit.  The value of this variable should be set to be 0 for units that
+do not participate in the treatment in any time period.}
 
 \item{tname}{The name of the column containing the time periods}
 
 \item{idname}{The individual (cross-sectional unit) id name}
+
+\item{xformula}{A formula for additional covariates.  This is not currently supported.}
 
 \item{data}{The name of the data.frame that contains the data}
 
@@ -74,6 +74,23 @@ behavior of the function (and target of the analysis).  For example, setting
 \code{target_parameter="level"} and \code{aggregation="eventstudy"} is effectively the same thing
 as binarizing the treatment (i.e., where units are considered treated if they experience any
 positive amount of the treatment) and reporting an event study.}
+
+\item{treatment_type}{"continuous" or "discrete" depending on the nature of the treatment.
+Default is "continuous".  "discrete" is not yet supported.}
+
+\item{dvals}{The values of the treatment at which to compute dose-specific effects.
+If it is not specified, the default choice will be use the percentiles of the dose among
+all ever-treated units.}
+
+\item{degree}{The degree of the B-Spline used in estimation.  The default is 1, which in
+combination with the default choice for the \code{num-knots}, leads to fitting models for
+the group of treated units that only includes the a linear term in the dose.  For
+nonparametric or flexible parametric estimation, a good option is to set
+\code{degree=3}.}
+
+\item{num_knots}{The number of knots to include for the B-Spline.  The default is 0
+so that the spline is global.  There is a bias-variance tradeoff for inlcluding
+more or less knots.}
 
 \item{allow_unbalanced_panel}{Whether or not function should
 "balance" the panel with respect to time and id.  The default
@@ -115,6 +132,13 @@ band that covers all of the group-time average treatment effects
 with fixed probability \code{1-alp}.  In order to compute uniform confidence
 bands, \code{bstrap} must also be set to \code{TRUE}.  The default is
 \code{TRUE}.}
+
+\item{boot_type}{should be one of "multiplier" (the default) or "empirical".
+The multiplier bootstrap is generally much faster, but \code{attgt_fun} needs
+to provide an expression for the influence function (which could be challenging
+to figure out).  If no influence function is provided, then the \code{pte}
+package will use the empirical bootstrap no matter what the value of this
+parameter.}
 
 \item{biters}{The number of bootstrap iterations to use.  The default is 1000,
 and this is only applicable if \code{bstrap=TRUE}.}
@@ -170,6 +194,14 @@ extra estimate in an earlier period.}
 
 \item{print_details}{Whether or not to show details/progress of computations.
 Default is \code{FALSE}.}
+
+\item{cl}{number of clusters to be used when bootstrapping; default is 1}
+
+\item{...}{extra arguments that can be passed to create the correct subsets
+of the data (depending on \code{subset_fun}), to estimate group time
+average treatment effects (depending on \code{attgt_fun}), or to
+aggregating treatment effects (particularly useful are \code{min_e},
+\code{max_e}, and \code{balance_e} arguments to event study aggregations)}
 }
 \value{
 cont_did_obj
@@ -178,6 +210,6 @@ cont_did_obj
 A function for difference-in-differences with a continuous treatment in a
 staggered treatment adoption setting.
 
-\code{cont_did} currently supports staggered treatment with continuous treatments using the
-\code{np} package (=> kernel regression) under the hood.
+\code{cont_did} currently supports staggered treatment with continuous treatments using
+B-splines under the hood.
 }

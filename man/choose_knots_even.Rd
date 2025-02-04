@@ -2,11 +2,13 @@
 % Please edit documentation in R/helper_functions.R
 \name{choose_knots_even}
 \alias{choose_knots_even}
-\title{choose_knots_even}
+\title{Choose Evenly Spaced Knots}
 \usage{
-choose_knots_even(X, num_knots)
+choose_knots_even(x, num_knots)
 }
 \arguments{
+\item{x}{vector of treatment doses}
+
 \item{num_knots}{the number of knots to use}
 }
 \value{

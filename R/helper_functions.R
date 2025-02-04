@@ -1,4 +1,4 @@
-#' @title choose_knots_quantile
+#' @title Choose Knots at Quantiles
 #'
 #' @description A function to choose knots for fitting b-splines by the quantile of x
 #'
@@ -12,7 +12,7 @@ choose_knots_quantile <- function(x, num_knots) {
     quantile(x, probs = seq(0, 1, length.out = num_knots + 2))[-c(1, num_knots + 2)]
 }
 
-#' @title choose_knots_even
+#' @title Choose Evenly Spaced Knots
 #'
 #' @description A function to place equally spaced knots for fitting b-splines
 #'
@@ -21,6 +21,6 @@ choose_knots_quantile <- function(x, num_knots) {
 #' @return a vector containing the locations of the knots
 #'
 #' @export
-choose_knots_even <- function(X, num_knots) {
-    seq(min(X), max(X), length.out = num_knots + 2)[-c(1, num_knots + 2)]
+choose_knots_even <- function(x, num_knots) {
+    seq(min(x), max(x), length.out = num_knots + 2)[-c(1, num_knots + 2)]
 }

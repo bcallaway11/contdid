@@ -1,10 +1,11 @@
-#' @title setup_pte_cont
+#' @title Setup for DiD with a Continuous Treatment
 #'
 #' @description A function that creates a pte_params object, adding
 #'  several different variables that are needed when there is a
 #'  continuous treatment.
 #'
 #' @inheritParams ptetools::setup_pte
+#' @inheritParams cont_did
 #'
 #' @param dvals an optional argument specifying which values of the
 #'  treatment to evaluate ATT(d) and/or ACRT(d).  If no values are
@@ -32,7 +33,6 @@ setup_pte_cont <- function(yname,
                            boot_type = "multiplier",
                            weightsname = NULL,
                            gt_type = "att",
-                           ret_quantile = 0.5,
                            biters = 100,
                            cl = 1,
                            dname,
@@ -54,10 +54,6 @@ setup_pte_cont <- function(yname,
         boot_type = boot_type,
         gt_type = gt_type,
         weightsname = weightsname,
-        ret_quantile = ret_quantile,
-        global_fun = global_fun,
-        time_period_fun = time_period_fun,
-        group_fun = group_fun,
         biters = biters,
         cl = cl,
         ...

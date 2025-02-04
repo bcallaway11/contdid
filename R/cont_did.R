@@ -1,24 +1,24 @@
-#' @title cont_did
+#' @title Difference-in-diffrences with a Continuous Treatment
 #'
 #' @description A function for difference-in-differences with a continuous treatment in a
 #'  staggered treatment adoption setting.
 #'
-#'  `cont_did` currently supports staggered treatment with continuous treatments using the
-#'  `np` package (=> kernel regression) under the hood.
+#'  `cont_did` currently supports staggered treatment with continuous treatments using
+#'  B-splines under the hood.
 #'
 #' @param dname The name of the treatment variable in the data.  The functionality of
 #'  `cont_did` is different from the `did` package in that the treatment variable is
 #'  the "amount" of the treatment in a particular period, rather than `gname` which
-#'  gives the time period when a unit becomes treated.  Based on the `dname` variable,
-#'  the `cont_did` package will "figure out" the treatment timing.
-#'
-#'  To give an example, suppose that the treatment variable is called `D` in data frame
-#'  `df`.  Furthermore, suppose there are 4 time periods, and a particular unit becomes
-#'  treated in the time period 3 with dose 5.  Then, `dname="D"`, and for this unit
-#'  `df$D` will be `c(0, 0, 5, 5)`.`
+#'  gives the time period when a unit becomes treated.  The `dname` variable should,
+#'  for a particular unit, be constant across time periods---even in pre-treatment periods.
+#'  For units that never participate in the treatment, the amount of the treatment may
+#'  not be defined in some applications---it is ignored in this function.
 #' @inheritParams did::att_gt
-#' @param gname This is an optional name for the timing-group.  If it is not supplied, then
-#'  the function will attempt to create a timing-group variable based on the `dname`.
+#' @inheritParams ptetools::pte
+#' @param xformula A formula for additional covariates.  This is not currently supported.
+#' @param gname The name of the timing-group variable, i.e., when treatment starts for
+#'  a particular unit.  The value of this variable should be set to be 0 for units that
+#'  do not participate in the treatment in any time period.
 #' @param target_parameter Two options are "level" and "slope".  In the first case, the function
 #'  will report level effects, i.e., ATT's.  In the second case, the function will report
 #'  slope effects, i.e., ACRT's
@@ -34,6 +34,23 @@
 #'  `target_parameter="level"` and `aggregation="eventstudy"` is effectively the same thing
 #'  as binarizing the treatment (i.e., where units are considered treated if they experience any
 #'  positive amount of the treatment) and reporting an event study.
+#'
+#' @param treatment_type "continuous" or "discrete" depending on the nature of the treatment.
+#'  Default is "continuous".  "discrete" is not yet supported.
+#'
+#' @param dvals The values of the treatment at which to compute dose-specific effects.
+#'  If it is not specified, the default choice will be use the percentiles of the dose among
+#'  all ever-treated units.
+#'
+#' @param degree The degree of the B-Spline used in estimation.  The default is 1, which in
+#'  combination with the default choice for the `num-knots`, leads to fitting models for
+#'  the group of treated units that only includes the a linear term in the dose.  For
+#'  nonparametric or flexible parametric estimation, a good option is to set
+#'  `degree=3`.
+#'
+#' @param num_knots The number of knots to include for the B-Spline.  The default is 0
+#'  so that the spline is global.  There is a bias-variance tradeoff for inlcluding
+#'  more or less knots.
 #'
 #' @return cont_did_obj
 #' @export
@@ -95,7 +112,7 @@ cont_did <- function(yname,
   }
 
   if (treatment_type == "continuous" && aggregation == "dose" && target_parameter == "level") {
-    attgt_fun <- cont_did_att
+    attgt_fun <- cont_did_acrt # it will compute both att and acrt
     gt_type <- "dose"
   }
 
@@ -115,7 +132,7 @@ cont_did <- function(yname,
     gname <- ".G"
   }
 
-  res <- pte2(
+  res <- pte(
     yname = yname,
     gname = gname,
     tname = tname,
@@ -144,6 +161,21 @@ cont_did <- function(yname,
   res
 }
 
+#' @title Compute ACRT's for a Timing Group and Time Period
+#'
+#' @description This is the main function for computing dose-specific
+#'  effects of a continuous treatment, given a particular timing group
+#'  and time period.
+#'
+#' @inheritParams ptetools::pte_attgt
+#' @inheritParams cont_did
+#' @param knots A vector of placements of knots for b-splines.  Since this function
+#'  is typically called internally, this would typically be set by the calling
+#'  function.
+#' @param ... additional arguments
+#'
+#' @return ptetools::attgt_if object
+#' @export
 cont_did_acrt <- function(
     gt_data,
     dvals = NULL,
@@ -151,7 +183,8 @@ cont_did_acrt <- function(
     knots = numeric(0),
     ...) {
   gt_data$dy <- BMisc::get_first_difference(gt_data, "id", "Y", "period")
-  post_data <- subset(gt_data, name == "post")
+  # post_data <- subset(gt_data, name == "post")
+  post_data <- with(gt_data, subset(gt_data, name == "post"))
   dose <- post_data$D
   dy <- post_data$dy
 
@@ -221,6 +254,19 @@ cont_did_acrt <- function(
   inffunc <- rep(0, nrow(post_data))
   inffunc[dose > 0] <- as.numeric(inffunc1 + inffunc2)
 
+  # some hack code to get influence function right
+  # in aggregations into effects at different doses
+  # just keep track of which unit are in the treated group
+  # and comparison group for this g-t.  Set inffunc=1
+  # for treated units and inffunc=Inf for comparison units.
+  # args <- list(...)
+  # if ("inffunc_track_treated_and_comparison" %in% names(args)) {
+  #   if (args$inffunc_track_treated_and_comparison) {
+  #     inffunc <- rep(Inf, nrow(post_data))
+  #     inffunc[dose > 0] <- 1
+  #   }
+  # }
+
   attgt_if(
     attgt = acrt.overall,
     inf_func = inffunc,
@@ -236,10 +282,10 @@ cont_did_acrt <- function(
   )
 }
 
-#' @title cont_two_by_two_subset
+#' @title Continuous Two-by-Two Subset
 #'
 #' @description A function for computing a 2x2 subset of original data.
-#'  This function is adapted from `pte::two_by_two_subset` and allows
+#'  This function is adapted from `ptetools::two_by_two_subset` and allows
 #'  for the treatment to be continuous.
 #'  This is the subset with post treatment periods separately for the
 #'  treated group and comparison group and pre-treatment periods in the period
@@ -248,6 +294,7 @@ cont_did_acrt <- function(
 #' @param data the full dataset
 #' @param g the current group
 #' @param tp the current time period
+#' @inheritParams ptetools::two_by_two_subset
 #' @param control_group whether to use "notyettreated" (default) or
 #'  "nevertreated"
 #' @param ... extra arguments to get the subset correct
@@ -292,14 +339,14 @@ cont_two_by_two_subset <- function(data,
 
   # get group g and not-yet-treated group
   if (control_group == "notyettreated") {
-    this.data <- subset(data, G == g | G > tp | G == 0)
+    this.data <- with(data, subset(data, G == g | G > tp | G == 0))
   } else {
     # use never treated group
-    this.data <- subset(data, G == g | G == 0)
+    this.data <- with(data, subset(data, G == g | data$G == 0))
   }
 
   # get current period and base period data
-  this.data <- subset(this.data, period == tp | period == base.period)
+  this.data <- with(this.data, subset(this.data, period == tp | period == base.period))
 
   # variable to keep track of pre/post periods
   this.data$name <- ifelse(this.data$period == tp, "post", "pre")

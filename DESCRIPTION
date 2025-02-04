@@ -4,7 +4,6 @@ Version: 0.0.001
 Authors@R: c(person("Brantly", "Callaway", email = "brantly.callaway@uga.edu", role = c("aut", "cre")),
              person("Andrew", "Goodman-Bacon", email = "andrew@goodman-bacon.com", role = c("aut")),
              person("Pedro H. C.", "Sant'Anna", email="pedro.h.santanna@emory.edu", role = c("aut")))
-URL: https://bcallaway11.github.io/contdid/
 Description: Difference-in-differences with a continuous treatment and staggered treatment adoption.
 Depends:
     R (>= 3.5),
@@ -12,11 +11,16 @@ License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Imports:
-    BMisc (>= 1.4.7),
+    BMisc (>= 1.4.8),
     ptetools,
     checkmate,
     splines2,
-    tidyr
+    tidyr,
+    sandwich,
+    ggplot2
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
-VignetteBuilder: knitr
+URL:
+    https://bcallaway11.github.io/contdid/,
+    https://github.com/bcallaway11/contdid
+BugReports: https://github.com/bcallaway11/contdid/issues

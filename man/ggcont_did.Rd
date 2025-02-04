@@ -2,7 +2,7 @@
 % Please edit documentation in R/ggcont_did.R
 \name{ggcont_did}
 \alias{ggcont_did}
-\title{ggcont_did}
+\title{Plot Results with a Continuous Treatment}
 \usage{
 ggcont_did(dose_obj, type = "att")
 }

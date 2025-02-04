@@ -2,7 +2,7 @@
 % Please edit documentation in R/cont_did.R
 \name{cont_two_by_two_subset}
 \alias{cont_two_by_two_subset}
-\title{cont_two_by_two_subset}
+\title{Continuous Two-by-Two Subset}
 \usage{
 cont_two_by_two_subset(
   data,
@@ -24,6 +24,20 @@ cont_two_by_two_subset(
 \item{control_group}{whether to use "notyettreated" (default) or
 "nevertreated"}
 
+\item{anticipation}{the number of periods of anticipation (i.e., number
+of periods before the treatment happens where the treatment can "already"
+affect the outcome)}
+
+\item{base_period}{The type of base period to use.  This only affects
+the numeric value of results in pre-treatment periods.  Results in
+post-treatment periods are not affected by this choice.  The default
+is "varying", where the base period will "back up" to the immediately
+preceding period in pre-treatment periods.  The other option is "universal"
+where the base period is fixed in pre-treatment periods to be the period
+right before the treatment starts.  "Universal" is commonly used in
+difference-in-differences applications, but can be unnatural for other
+identification strategies.}
+
 \item{...}{extra arguments to get the subset correct}
 }
 \value{
@@ -34,7 +48,7 @@ subset.
 }
 \description{
 A function for computing a 2x2 subset of original data.
-This function is adapted from \code{pte::two_by_two_subset} and allows
+This function is adapted from \code{ptetools::two_by_two_subset} and allows
 for the treatment to be continuous.
 This is the subset with post treatment periods separately for the
 treated group and comparison group and pre-treatment periods in the period

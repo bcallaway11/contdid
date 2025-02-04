@@ -12,6 +12,8 @@
 Useful links:
 \itemize{
   \item \url{https://bcallaway11.github.io/contdid/}
+  \item \url{https://github.com/bcallaway11/contdid}
+  \item Report bugs at \url{https://github.com/bcallaway11/contdid/issues}
 }
 
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/helper_functions.R
 \name{choose_knots_quantile}
 \alias{choose_knots_quantile}
-\title{choose_knots_quantile}
+\title{Choose Knots at Quantiles}
 \usage{
 choose_knots_quantile(x, num_knots)
 }
