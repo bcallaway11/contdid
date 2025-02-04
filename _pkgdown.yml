@@ -1,4 +1,38 @@
 url: https://github.com/bcallaway11/contdid
+
 template:
   bootstrap: 5
 
+home:
+  sidebar:
+    structure: [links, license, community, citation]
+  logo: man/figures/logo.png
+
+navbar:
+  structure:
+    left: [reference, articles, news]
+    right: [github]
+  components:
+    github:
+      icon: fa-github
+      href: https://github.com/bcallaway11/contdid
+
+reference:
+  - title: Main Function
+    contents:
+      - cont_did
+
+  - title: Functions for Component Computations
+    contents:
+      - setup_pte_cont
+      - cont_two_by_two_subset
+      - cont_did_acrt
+
+  - title: Plotting Functions
+    contents:
+      - ggcont_did
+
+  - title: Helper Functions
+    contents:
+      - choose_knots_even
+      - choose_knots_quantile
