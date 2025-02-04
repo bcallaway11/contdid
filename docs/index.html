@@ -59,21 +59,10 @@
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bcallaway11.github.io/contdid/" class="external-link">contdid</a></span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="example">Example<a class="anchor" aria-label="anchor" href="#example"></a>
+<h2 id="conceptual-setup">Conceptual Setup<a class="anchor" aria-label="anchor" href="#conceptual-setup"></a>
 </h2>
-<p>To start with, we will simulate some data, where the continuous treatment <code>D</code> has no affect on the outcome.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Simulate data</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span>
-<span><span class="va">sp</span> <span class="op">&lt;-</span> <span class="fu">did</span><span class="fu">::</span><span class="fu"><a href="https://bcallaway11.github.io/did/reference/reset.sim.html" class="external-link">reset.sim</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="va">sp</span><span class="op">$</span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">10000</span></span>
-<span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu">did</span><span class="fu">::</span><span class="fu"><a href="https://bcallaway11.github.io/did/reference/build_sim_dataset.html" class="external-link">build_sim_dataset</a></span><span class="op">(</span><span class="va">sp</span><span class="op">)</span></span>
-<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">id</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">D</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="co"># add treatment variable</span></span>
-<span><span class="va">df</span><span class="op">$</span><span class="va">D</span> <span class="op">&lt;-</span> <span class="fu">BMisc</span><span class="fu">::</span><span class="fu"><a href="https://bcallaway11.github.io/BMisc/reference/time_invariant_to_panel.html" class="external-link">time_invariant_to_panel</a></span><span class="op">(</span><span class="va">D</span>, <span class="va">df</span>, <span class="st">"id"</span><span class="op">)</span></span></code></pre></div>
-<p>The following code illustrates how to estimate <code>ATT(d)</code> and <code>ACRT(d)</code> using the <code>cont_did</code> function, provided by the package.</p>
-<p>The interface is basically the same as for the <code>did</code> package and for other packages that rely on the <code>ptetools</code> backend. The main additional things that need to be provided to the function are the name of the continuous treatment variable, which should be passed through the <code>dname</code> argument.</p>
+<p>Below, we give several examples of how to estimate causal effect parameters using the <code>cont_did</code> package.</p>
+<p>At a high level, the interface is basically the same as for the <code>did</code> package and for other packages that rely on the <code>ptetools</code> backend, with only a few pieces of additional information being required. First, the name of the continuous treatment variable should be passed through the <code>dname</code> argument.</p>
 <p>The <code>cont_did</code> function expects the continuous treatment variable to behave in certain ways:</p>
 <ol style="list-style-type: decimal">
 <li><p>It needs to be time-invariant.</p></li>
@@ -82,13 +71,44 @@
 </ol>
 <p>Next, the other important parameters are <code>target_parameter</code>, <code>aggregation</code>, and <code>treatment_type</code>:</p>
 <ul>
-<li><p><code>target_parameter</code> can either be “level” or “slope”. If “level”, then the function will calculate <code>ATT</code> parameters. If set to be “slope”, then the function will calculate <code>ACRT</code> parameters—these are causal response parameters that are derivatives of the <code>ATT</code> parameters. Our paper @callaway-goodman-santanna-2024 points out some complications for interpreting these derivative type parameters under the most commonly invoked version of the parallel trends assumption.</p></li>
+<li><p><code>target_parameter</code> can either be “level” or “slope”. If “level”, then the function will calculate <code>ATT</code> parameters. If set to be “slope”, then the function will calculate <code>ACRT</code> parameters—these are causal response parameters that are derivatives of the <code>ATT</code> parameters. Our paper <a href="https://arxiv.org/abs/2107.02637" class="external-link">Callaway, Goodman-Bacon, and Sant’Anna (2024)</a> points out some complications for interpreting these derivative type parameters under the most commonly invoked version of the parallel trends assumption.</p></li>
 <li><p><code>aggregation</code> can either by “eventstudy” or “dose”. For “eventstudy”, depending on the value of the <code>target_parameter</code> argument, the function will provide either the average <code>ATT</code> across different event times or the average <code>ACRT</code> across different event times. For “dose”, the function will average across all time periods and report average affects across different values of the continuous treatment. For the “dose” aggregation, results are calculated for both <code>ATT</code> and <code>ACRT</code> and can be displayed by providing different arguments to plotting functions (see example below).</p></li>
 <li><p><code>treatment_type</code> can either be “continuous” or “discrete”. Currently only “continuous” is supported. In this case, the code proceeds as if the treatment really is continuous. The estimate are computed nonparametrically using B-splines. The user can control the number of knots and the degree of the B-splines using the <code>num_knots</code> and <code>degree</code> arguments. The defaults are <code>num_knots=0</code> and <code>degree=1</code> which amounts to estimating <code>ATT(d)</code> by estimating a linear model in the continuous treatment among treated units and subtracting the average outcome among the comparison units.</p></li>
 </ul>
+</div>
+<div class="section level2">
+<h2 id="examples">Examples<a class="anchor" aria-label="anchor" href="#examples"></a>
+</h2>
+<p>With a continous treatment, the underlying building blocks are treatment effects that are local to a particular timing group <code>g</code> in a particular time period <code>t</code> that experienced a particular value of the treatment <code>d</code>. These treatment affects are relatively high-dimensional, and most applications are likely to involve aggregating/combining these underlying parameters. We focus on aggregations that (i) average across timing-groups and time periods to given average treatment effect parameters as a function of the dose <code>d</code> or (ii) averages across doses and partially across timing group and time periods in order to give event studies.</p>
+<p>For the results below, we will simulate some data, where the continuous treatment <code>D</code> has no effect on the outcome.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Simulate data</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span>
+<span><span class="co"># baseline simulation parameters</span></span>
+<span><span class="va">sp</span> <span class="op">&lt;-</span> <span class="fu">did</span><span class="fu">::</span><span class="fu"><a href="https://bcallaway11.github.io/did/reference/reset.sim.html" class="external-link">reset.sim</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co"># adjust some default simulation parameters</span></span>
+<span><span class="va">sp</span><span class="op">$</span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">10000</span> <span class="co"># increase number of units</span></span>
+<span><span class="va">sp</span><span class="op">$</span><span class="va">bett</span> <span class="op">&lt;-</span> <span class="va">sp</span><span class="op">$</span><span class="va">betu</span> <span class="op">&lt;-</span> <span class="va">sp</span><span class="op">$</span><span class="va">te.bet.X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">sp</span><span class="op">$</span><span class="va">bett</span><span class="op">)</span><span class="op">)</span> <span class="co"># no effects of covariates</span></span>
+<span><span class="va">sp</span><span class="op">$</span><span class="va">te</span> <span class="op">&lt;-</span> <span class="fl">0</span> <span class="co"># the effect of the treatment is 0</span></span>
+<span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu">did</span><span class="fu">::</span><span class="fu"><a href="https://bcallaway11.github.io/did/reference/build_sim_dataset.html" class="external-link">build_sim_dataset</a></span><span class="op">(</span><span class="va">sp</span><span class="op">)</span></span>
+<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">id</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">D</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="co"># add treatment variable, it is fully independent of everything else</span></span>
+<span><span class="va">df</span><span class="op">$</span><span class="va">D</span> <span class="op">&lt;-</span> <span class="fu">BMisc</span><span class="fu">::</span><span class="fu"><a href="https://bcallaway11.github.io/BMisc/reference/time_invariant_to_panel.html" class="external-link">time_invariant_to_panel</a></span><span class="op">(</span><span class="va">D</span>, <span class="va">df</span>, <span class="st">"id"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 6 × 8</span></span>
+<span><span class="co">#&gt;       G      X    id cluster period     Y treat      D</span></span>
+<span><span class="co">#&gt;   &lt;dbl&gt;  &lt;dbl&gt; &lt;int&gt;   &lt;int&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1     4 -0.560     1      19      1  2.47     1 0.548 </span></span>
+<span><span class="co">#&gt; 2     4 -0.560     1      19      2  5.23     1 0.548 </span></span>
+<span><span class="co">#&gt; 3     4 -0.560     1      19      3  6.20     1 0.548 </span></span>
+<span><span class="co">#&gt; 4     4 -0.560     1      19      4  6.29     1 0.548 </span></span>
+<span><span class="co">#&gt; 5     3  1.56      3      16      1  2.63     1 0.0237</span></span>
+<span><span class="co">#&gt; 6     3  1.56      3      16      2  4.21     1 0.0237</span></span></code></pre></div>
 <div class="section level3">
-<h3 id="dose-aggregation">Dose Aggregation<a class="anchor" aria-label="anchor" href="#dose-aggregation"></a>
+<h3 id="case-1-dose-aggregation">Case 1: Dose Aggregation<a class="anchor" aria-label="anchor" href="#case-1-dose-aggregation"></a>
 </h3>
+<p>The following code can be used to estimate the <code>ATT(d)</code> and <code>ACRT(d)</code> parameters for the continuous treatment <code>D</code> using the <code>cont_did</code> function. The <code>aggregation</code> argument is set to “dose” and the <code>target_parameter</code> argument is set to “level” for <code>ATT(d)</code> and “slope” for <code>ACRT(d)</code>.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cd_res</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/cont_did.html">cont_did</a></span><span class="op">(</span></span>
 <span>  yname <span class="op">=</span> <span class="st">"Y"</span>,</span>
@@ -110,13 +130,13 @@
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">cd_res</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Overall ATT:  </span></span>
-<span><span class="co">#&gt;     ATT    Std. Error     [ 95%  Conf. Int.]  </span></span>
-<span><span class="co">#&gt;  1.4145        0.0366     1.3427      1.4863 *</span></span>
+<span><span class="co">#&gt;     ATT    Std. Error     [ 95%  Conf. Int.] </span></span>
+<span><span class="co">#&gt;  0.0067         0.027    -0.0461      0.0596 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Overall ACRT:  </span></span>
-<span><span class="co">#&gt;     ACRT    Std. Error     [ 95%  Conf. Int.] </span></span>
-<span><span class="co">#&gt;  -0.0582        0.0588    -0.1734       0.057 </span></span>
+<span><span class="co">#&gt;    ACRT    Std. Error     [ 95%  Conf. Int.] </span></span>
+<span><span class="co">#&gt;  0.0376        0.0532    -0.0667      0.1419 </span></span>
 <span><span class="co">#&gt; ---</span></span>
 <span><span class="co">#&gt; Signif. codes: `*' confidence band does not cover 0</span></span>
 <span><span class="fu"><a href="reference/ggcont_did.html">ggcont_did</a></span><span class="op">(</span><span class="va">cd_res</span>, type <span class="op">=</span> <span class="st">"att"</span><span class="op">)</span></span></code></pre></div>
@@ -126,9 +146,11 @@
 <p><img src="reference/figures/README-unnamed-chunk-5-2.png" width="100%"></p>
 </div>
 <div class="section level3">
-<h3 id="event-study-aggregations">Event Study Aggregations<a class="anchor" aria-label="anchor" href="#event-study-aggregations"></a>
+<h3 id="case-2-event-study-aggregations">Case 2: Event Study Aggregations<a class="anchor" aria-label="anchor" href="#case-2-event-study-aggregations"></a>
 </h3>
-<p>An event study aggregation for <code>ATT</code></p>
+<p>Next, we consider event study aggregations. The first is event study aggregation for <code>ATT</code>. The second is event study aggregation for <code>ACRT</code>.</p>
+<p><strong>Event study aggregation for <code>ATT</code>:</strong></p>
+<p>Notice that the target parameter is set <code>level</code> to target ATT, and the <code>aggregation</code> argument is set to <code>eventstudy</code>.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cd_res_es_level</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/cont_did.html">cont_did</a></span><span class="op">(</span></span>
 <span>  yname <span class="op">=</span> <span class="st">"Y"</span>,</span>
@@ -150,22 +172,23 @@
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">cd_res_es_level</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Overall ATT:  </span></span>
-<span><span class="co">#&gt;     ATT    Std. Error     [ 95%  Conf. Int.]  </span></span>
-<span><span class="co">#&gt;  1.0171        0.0439      0.931      1.1033 *</span></span>
+<span><span class="co">#&gt;     ATT    Std. Error     [ 95%  Conf. Int.] </span></span>
+<span><span class="co">#&gt;  0.0121        0.0192    -0.0255      0.0497 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Dynamic Effects:</span></span>
-<span><span class="co">#&gt;  Event Time Estimate Std. Error  [95%  Conf. Band]  </span></span>
-<span><span class="co">#&gt;          -2   0.1651     0.0564 0.0144      0.3157 *</span></span>
-<span><span class="co">#&gt;          -1   0.2665     0.0339 0.1760      0.3569 *</span></span>
-<span><span class="co">#&gt;           0   0.9330     0.0307 0.8509      1.0151 *</span></span>
-<span><span class="co">#&gt;           1   1.0211     0.0480 0.8929      1.1493 *</span></span>
-<span><span class="co">#&gt;           2   1.1971     0.0962 0.9400      1.4542 *</span></span>
+<span><span class="co">#&gt;  Event Time Estimate Std. Error   [95%  Conf. Band] </span></span>
+<span><span class="co">#&gt;          -2  -0.0965     0.0410 -0.2054      0.0124 </span></span>
+<span><span class="co">#&gt;          -1   0.0339     0.0256 -0.0341      0.1019 </span></span>
+<span><span class="co">#&gt;           0   0.0091     0.0207 -0.0457      0.0639 </span></span>
+<span><span class="co">#&gt;           1   0.0149     0.0246 -0.0504      0.0803 </span></span>
+<span><span class="co">#&gt;           2   0.0058     0.0381 -0.0953      0.1070 </span></span>
 <span><span class="co">#&gt; ---</span></span>
 <span><span class="co">#&gt; Signif. codes: `*' confidence band does not cover 0</span></span>
 <span><span class="fu"><a href="reference/ggcont_did.html">ggcont_did</a></span><span class="op">(</span><span class="va">cd_res_es_level</span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-unnamed-chunk-6-1.png" width="100%"></p>
-<p>And an event study aggregation for <code>ACRT</code></p>
+<p><strong>Event study aggregation for <code>ACRT</code>:</strong></p>
+<p>Relative to the previous code, notice that the target parameter is set <code>slope</code> to target ACRT.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cd_res_es_slope</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/cont_did.html">cont_did</a></span><span class="op">(</span></span>
 <span>  yname <span class="op">=</span> <span class="st">"Y"</span>,</span>
@@ -187,17 +210,17 @@
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">cd_res_es_slope</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Overall ACRT:  </span></span>
-<span><span class="co">#&gt;      ATT    Std. Error     [ 95%  Conf. Int.] </span></span>
-<span><span class="co">#&gt;  -0.0582        0.0627    -0.1811      0.0647 </span></span>
+<span><span class="co">#&gt;     ATT    Std. Error     [ 95%  Conf. Int.] </span></span>
+<span><span class="co">#&gt;  0.0376        0.0435    -0.0477      0.1229 </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Dynamic Effects:</span></span>
 <span><span class="co">#&gt;  Event Time Estimate Std. Error   [95%  Conf. Band] </span></span>
-<span><span class="co">#&gt;          -2   0.0943     0.0955 -0.1312      0.3198 </span></span>
-<span><span class="co">#&gt;          -1   0.0234     0.0644 -0.1287      0.1755 </span></span>
-<span><span class="co">#&gt;           0   0.0435     0.0478 -0.0694      0.1565 </span></span>
-<span><span class="co">#&gt;           1  -0.1086     0.0924 -0.3269      0.1097 </span></span>
-<span><span class="co">#&gt;           2  -0.4764     0.2107 -0.9742      0.0213 </span></span>
+<span><span class="co">#&gt;          -2   0.0723     0.0510 -0.0656      0.2102 </span></span>
+<span><span class="co">#&gt;          -1   0.0036     0.0607 -0.1604      0.1676 </span></span>
+<span><span class="co">#&gt;           0   0.0862     0.0476 -0.0426      0.2150 </span></span>
+<span><span class="co">#&gt;           1   0.0448     0.0676 -0.1381      0.2277 </span></span>
+<span><span class="co">#&gt;           2   0.0457     0.1139 -0.2622      0.3537 </span></span>
 <span><span class="co">#&gt; ---</span></span>
 <span><span class="co">#&gt; Signif. codes: `*' confidence band does not cover 0</span></span>
 <span><span class="fu"><a href="reference/ggcont_did.html">ggcont_did</a></span><span class="op">(</span><span class="va">cd_res_es_slope</span><span class="op">)</span></span></code></pre></div>
