@@ -64,7 +64,7 @@ test_that("test basic functionality", {
   out <- summary(cd_res_es_level)
   ggcont_did(cd_res_es_level)
 
-  expect_true(abs(out$overall_att) < 0.5)
+  expect_true(abs(out$overall_att$overall_att) < 0.5)
   expect_true(abs(out$event_study$Estimate[5]) < 0.5) # event study at e=2
 
   cd_res_es_slope <- suppressWarnings(
@@ -89,6 +89,6 @@ test_that("test basic functionality", {
   out <- summary(cd_res_es_slope)
   ggcont_did(cd_res_es_slope)
 
-  expect_true(abs(out$overall_att) < 0.1)
+  expect_true(abs(out$overall_att$overall_att) < 0.1)
   expect_true(abs(out$event_study$Estimate[5]) < 0.1) # event study at e=2
 })
