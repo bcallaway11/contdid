@@ -24,3 +24,6 @@ URL:
     https://bcallaway11.github.io/contdid/,
     https://github.com/bcallaway11/contdid
 BugReports: https://github.com/bcallaway11/contdid/issues
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
