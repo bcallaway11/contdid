@@ -1,0 +1,67 @@
+name: R Package Checks and Coverage
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ${{ matrix.config.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - {os: windows-latest, r: 'release'}
+          - {os: windows-latest, r: 'devel'}
+          - {os: macOS-latest, r: 'release'}
+          - {os: ubuntu-latest, r: 'release'}
+          - {os: ubuntu-latest, r: 'devel'}
+
+    name: ${{ matrix.config.os }} (R ${{ matrix.config.r }})
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.config.r }}
+      - name: Install dependencies
+        run: |
+          Rscript -e "install.packages('remotes')"
+          Rscript -e "remotes::install_deps(dependencies = TRUE)"
+      - name: Install system dependencies (Ubuntu only)
+        if: runner.os == 'Linux'
+        run: sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev libfreetype6-dev libfontconfig1-dev libharfbuzz-dev libfribidi-dev libpng-dev libjpeg-dev libtiff5-dev
+      - name: Setup Check
+        run: |
+          Rscript -e "install.packages('rcmdcheck')"
+          mkdir -p "check-${{ matrix.config.os }}"
+      - name: Check
+        run: |
+          Rscript -e "rcmdcheck::rcmdcheck(args = '--no-manual', error_on = 'error', check_dir = 'check-${{ matrix.config.os }}')"
+      - name: Setup Test
+        run: |
+          mkdir -p "test-results-${{ matrix.config.os }}"
+          Rscript -e "install.packages('testthat')"
+          Rscript -e "install.packages('devtools')"
+          Rscript -e "devtools::install('.', dependencies = TRUE)"
+      - name: Test
+        run: |
+          Rscript -e "testthat::test_dir('tests', reporter = testthat::SummaryReporter)"
+      - name: Code Coverage
+        if: matrix.config.os == 'ubuntu-latest' && matrix.config.r == 'release'
+        run: |
+          Rscript -e "install.packages('covr')"
+          Rscript -e "covr::codecov()"
+      - name: Upload check results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: R-CMD-check-results-${{ matrix.config.os }}-${{ matrix.config.r }}
+          path: check-*
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: R-test-results-${{ matrix.config.os }}-${{ matrix.config.r }}
+          path: test-results-*

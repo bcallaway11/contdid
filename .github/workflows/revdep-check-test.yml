@@ -1,0 +1,98 @@
+name: Reverse Dependency Check
+
+on:
+  workflow_dispatch:
+
+jobs:
+  revdep_check:
+    runs-on: ubuntu-latest
+
+    name: Reverse check ${{ inputs.which }} dependents
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libcurl4-openssl-dev \
+            libssl-dev \
+            libxml2-dev \
+            libfreetype6-dev \
+            libfontconfig1-dev \
+            libharfbuzz-dev \
+            libfribidi-dev \
+            libpng-dev \
+            libjpeg-dev \
+            libtiff5-dev \
+            gfortran \
+            libblas-dev \
+            liblapack-dev
+
+      - name: Install R dependencies
+        run: |
+          Rscript -e "install.packages(c('remotes', 'revdepcheck', 'testthat', 'rcmdcheck'))"
+          Rscript -e "remotes::install_deps(dependencies = TRUE)"
+
+      - name: Setup Reverse Dependency Check
+        run: |
+          Rscript -e "
+          rev_deps <- tools::package_dependencies(
+            packages = 'contdid',
+            db = available.packages(),
+            reverse = TRUE
+          )
+          rev_deps <- rev_deps[['contdid']]
+          cat('Testing the following reverse dependencies:', rev_deps, '\n')
+
+          for (pkg in rev_deps) {
+            cat('Installing package:', pkg, '\n')
+            install.packages(pkg, dependencies = TRUE)
+          }
+          "
+      - name: Reverse Dependency Check
+        run: |
+          Rscript -e "
+          rev_deps <- tools::package_dependencies(
+            packages = 'contdid',
+            db = available.packages(),
+            reverse = TRUE
+          )
+          rev_deps <- rev_deps[['contdid']]
+
+          dir.create('revdep_tarballs', showWarnings = FALSE)
+
+          for (pkg in rev_deps) {
+            cat('Checking package:', pkg, '\n')
+            # Download the source tarball
+            tarball <- tryCatch({
+              tarball_info <- download.packages(pkg, destdir = 'revdep_tarballs', type = 'source')
+              # Extract the correct tarball file path
+              tarball_path <- tarball_info[, 2]  # The second column contains the file path
+              tarball_path  # Return the correct path
+            }, error = function(e) {
+              cat('Error downloading source tarball for package:', pkg, '\n', conditionMessage(e), '\n')
+              next
+            })
+            pkg_path <- find.package(pkg, quiet = TRUE)
+            tryCatch({
+              rcmdcheck::rcmdcheck(tarball, error_on = 'never', args = '--no-manual')
+            }, error = function(e) {
+              cat('Error checking package:', pkg, '\n', conditionMessage(e), '\n')
+            })
+          }
+          "
+
+      - name: Upload Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Reverse-Dependency-Check-Results
+          path: revdep/
