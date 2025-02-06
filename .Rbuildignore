@@ -3,3 +3,4 @@
 ^docs$
 ^pkgdown$
 ^LICENSE\.md$
+^\.github$

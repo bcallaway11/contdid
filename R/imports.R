@@ -6,5 +6,4 @@
 #' @import splines2
 #' @import sandwich
 #' @import ggplot2
-#' @importFrom tidyr %>%
 NULL

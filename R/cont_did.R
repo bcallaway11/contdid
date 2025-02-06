@@ -194,14 +194,14 @@ cont_did_acrt <- function(
     dvals <- shared_env$dvals
   }
 
-  bs <- splines2::bSpline(dose[dose > 0], degree = degree, knots = knots) %>% as.data.frame()
+  bs <- splines2::bSpline(dose[dose > 0], degree = degree, knots = knots) |> as.data.frame()
   colnames(bs) <- paste0("bs_", colnames(bs))
   bs$dy <- dy[dose > 0]
 
   bs_reg <- lm(dy ~ ., data = bs)
 
   # dose_grid <- quantile(dose[dose > 0], probs = seq(0, 1, length.out = 100))
-  bs_grid <- splines2::bSpline(dvals, degree = degree, knots = knots) %>% as.data.frame()
+  bs_grid <- splines2::bSpline(dvals, degree = degree, knots = knots) |> as.data.frame()
   colnames(bs_grid) <- colnames(model.matrix(bs_reg))[-1]
 
   att.d <- predict(bs_reg, newdata = bs_grid) - mean(dy[dose == 0])
@@ -217,7 +217,7 @@ cont_did_acrt <- function(
   # previous results just plug in different values of D
   # here average across the distribution of the dose to
   # get average treatment effect parameters
-  bs_grid2 <- splines2::bSpline(dose[dose > 0], degree = degree, knots = knots) %>% as.data.frame()
+  bs_grid2 <- splines2::bSpline(dose[dose > 0], degree = degree, knots = knots) |> as.data.frame()
   colnames(bs_grid2) <- colnames(model.matrix(bs_reg))[-1]
   att.overall <- mean(predict(bs_reg, newdata = bs_grid2)) - mean(dy[dose == 0])
   bs_deriv2 <- splines2::dbs(dose[dose > 0], degree = degree, knots = knots)

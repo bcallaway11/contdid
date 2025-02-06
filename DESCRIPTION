@@ -15,7 +15,6 @@ Imports:
     ptetools,
     checkmate,
     splines2,
-    tidyr,
     sandwich,
     ggplot2
 Roxygen: list(markdown = TRUE)
@@ -24,6 +23,7 @@ URL:
     https://bcallaway11.github.io/contdid/,
     https://github.com/bcallaway11/contdid
 BugReports: https://github.com/bcallaway11/contdid/issues
-Suggests: 
-    testthat (>= 3.0.0)
+Suggests:
+    testthat (>= 3.0.0),
+    tidyr
 Config/testthat/edition: 3

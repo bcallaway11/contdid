@@ -37,6 +37,12 @@ simulate_contdid_data <- function(
     pu = 1 / (num_groups),
     dose_linear_effect = 0,
     dose_quadratic_effect = 0) {
+    # tidyr needs to be available for this function to work
+    if (!requireNamespace("tidyr", quietly = TRUE)) {
+        stop("Package 'tidyr' is required for this function but is not installed.
+         Please install it with install.packages('tidyr').", call. = FALSE)
+    }
+
     # create time periods
     time_periods <- 1:num_time_periods
 
@@ -81,15 +87,14 @@ simulate_contdid_data <- function(
     df$G <- G
     df$D <- D
 
-
     # convert to long format
     df2 <- tidyr::pivot_longer(df,
-        cols = starts_with("Y"),
+        cols = tidyr::starts_with("Y"),
         names_to = "time_period",
         names_prefix = "Y_",
         names_transform = list(time_period = as.numeric),
         values_to = "Y"
-    ) %>% as.data.frame()
+    ) |> as.data.frame()
 
     df2
 }
