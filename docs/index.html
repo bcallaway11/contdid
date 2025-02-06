@@ -84,27 +84,21 @@
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Simulate data</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span>
-<span><span class="co"># baseline simulation parameters</span></span>
-<span><span class="va">sp</span> <span class="op">&lt;-</span> <span class="fu">did</span><span class="fu">::</span><span class="fu"><a href="https://bcallaway11.github.io/did/reference/reset.sim.html" class="external-link">reset.sim</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co"># adjust some default simulation parameters</span></span>
-<span><span class="va">sp</span><span class="op">$</span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">10000</span> <span class="co"># increase number of units</span></span>
-<span><span class="va">sp</span><span class="op">$</span><span class="va">bett</span> <span class="op">&lt;-</span> <span class="va">sp</span><span class="op">$</span><span class="va">betu</span> <span class="op">&lt;-</span> <span class="va">sp</span><span class="op">$</span><span class="va">te.bet.X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">sp</span><span class="op">$</span><span class="va">bett</span><span class="op">)</span><span class="op">)</span> <span class="co"># no effects of covariates</span></span>
-<span><span class="va">sp</span><span class="op">$</span><span class="va">te</span> <span class="op">&lt;-</span> <span class="fl">0</span> <span class="co"># the effect of the treatment is 0</span></span>
-<span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu">did</span><span class="fu">::</span><span class="fu"><a href="https://bcallaway11.github.io/did/reference/build_sim_dataset.html" class="external-link">build_sim_dataset</a></span><span class="op">(</span><span class="va">sp</span><span class="op">)</span></span>
-<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">id</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">D</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="co"># add treatment variable, it is fully independent of everything else</span></span>
-<span><span class="va">df</span><span class="op">$</span><span class="va">D</span> <span class="op">&lt;-</span> <span class="fu">BMisc</span><span class="fu">::</span><span class="fu"><a href="https://bcallaway11.github.io/BMisc/reference/time_invariant_to_panel.html" class="external-link">time_invariant_to_panel</a></span><span class="op">(</span><span class="va">D</span>, <span class="va">df</span>, <span class="st">"id"</span><span class="op">)</span></span>
+<span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/simulate_contdid_data.html">simulate_contdid_data</a></span><span class="op">(</span></span>
+<span>  n <span class="op">=</span> <span class="fl">5000</span>,</span>
+<span>  num_time_periods <span class="op">=</span> <span class="fl">4</span>,</span>
+<span>  num_groups <span class="op">=</span> <span class="fl">4</span>,</span>
+<span>  dose_linear_effect <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  dose_quadratic_effect <span class="op">=</span> <span class="fl">0</span></span>
+<span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span></span>
-<span><span class="co">#&gt; # A tibble: 6 × 8</span></span>
-<span><span class="co">#&gt;       G      X    id cluster period     Y treat      D</span></span>
-<span><span class="co">#&gt;   &lt;dbl&gt;  &lt;dbl&gt; &lt;int&gt;   &lt;int&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;</span></span>
-<span><span class="co">#&gt; 1     4 -0.560     1      19      1  2.47     1 0.548 </span></span>
-<span><span class="co">#&gt; 2     4 -0.560     1      19      2  5.23     1 0.548 </span></span>
-<span><span class="co">#&gt; 3     4 -0.560     1      19      3  6.20     1 0.548 </span></span>
-<span><span class="co">#&gt; 4     4 -0.560     1      19      4  6.29     1 0.548 </span></span>
-<span><span class="co">#&gt; 5     3  1.56      3      16      1  2.63     1 0.0237</span></span>
-<span><span class="co">#&gt; 6     3  1.56      3      16      2  4.21     1 0.0237</span></span></code></pre></div>
+<span><span class="co">#&gt;   id G         D time_period        Y</span></span>
+<span><span class="co">#&gt; 1  1 3 0.2486299           1 5.876551</span></span>
+<span><span class="co">#&gt; 2  1 3 0.2486299           2 3.151977</span></span>
+<span><span class="co">#&gt; 3  1 3 0.2486299           3 5.988353</span></span>
+<span><span class="co">#&gt; 4  1 3 0.2486299           4 7.477987</span></span>
+<span><span class="co">#&gt; 5  2 0 0.9894632           1 1.960782</span></span>
+<span><span class="co">#&gt; 6  2 0 0.9894632           2 2.548216</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="case-1-dose-aggregation">Case 1: Dose Aggregation<a class="anchor" aria-label="anchor" href="#case-1-dose-aggregation"></a>
 </h3>
@@ -112,7 +106,7 @@
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cd_res</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/cont_did.html">cont_did</a></span><span class="op">(</span></span>
 <span>  yname <span class="op">=</span> <span class="st">"Y"</span>,</span>
-<span>  tname <span class="op">=</span> <span class="st">"period"</span>,</span>
+<span>  tname <span class="op">=</span> <span class="st">"time_period"</span>,</span>
 <span>  idname <span class="op">=</span> <span class="st">"id"</span>,</span>
 <span>  dname <span class="op">=</span> <span class="st">"D"</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">df</span>,</span>
@@ -130,13 +124,13 @@
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">cd_res</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Overall ATT:  </span></span>
-<span><span class="co">#&gt;     ATT    Std. Error     [ 95%  Conf. Int.] </span></span>
-<span><span class="co">#&gt;  0.0067         0.027    -0.0461      0.0596 </span></span>
+<span><span class="co">#&gt;    ATT    Std. Error     [ 95%  Conf. Int.]  </span></span>
+<span><span class="co">#&gt;  0.082        0.0312     0.0209      0.1432 *</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Overall ACRT:  </span></span>
-<span><span class="co">#&gt;    ACRT    Std. Error     [ 95%  Conf. Int.] </span></span>
-<span><span class="co">#&gt;  0.0376        0.0532    -0.0667      0.1419 </span></span>
+<span><span class="co">#&gt;    ACRT    Std. Error     [ 95%  Conf. Int.]  </span></span>
+<span><span class="co">#&gt;  0.2279        0.0516     0.1268       0.329 *</span></span>
 <span><span class="co">#&gt; ---</span></span>
 <span><span class="co">#&gt; Signif. codes: `*' confidence band does not cover 0</span></span>
 <span><span class="fu"><a href="reference/ggcont_did.html">ggcont_did</a></span><span class="op">(</span><span class="va">cd_res</span>, type <span class="op">=</span> <span class="st">"att"</span><span class="op">)</span></span></code></pre></div>
@@ -154,7 +148,7 @@
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cd_res_es_level</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/cont_did.html">cont_did</a></span><span class="op">(</span></span>
 <span>  yname <span class="op">=</span> <span class="st">"Y"</span>,</span>
-<span>  tname <span class="op">=</span> <span class="st">"period"</span>,</span>
+<span>  tname <span class="op">=</span> <span class="st">"time_period"</span>,</span>
 <span>  idname <span class="op">=</span> <span class="st">"id"</span>,</span>
 <span>  dname <span class="op">=</span> <span class="st">"D"</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">df</span>,</span>
@@ -172,17 +166,17 @@
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">cd_res_es_level</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Overall ATT:  </span></span>
-<span><span class="co">#&gt;     ATT    Std. Error     [ 95%  Conf. Int.] </span></span>
-<span><span class="co">#&gt;  0.0121        0.0192    -0.0255      0.0497 </span></span>
+<span><span class="co">#&gt;    ATT    Std. Error     [ 95%  Conf. Int.]  </span></span>
+<span><span class="co">#&gt;  0.061        0.0276      0.007      0.1151 *</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Dynamic Effects:</span></span>
-<span><span class="co">#&gt;  Event Time Estimate Std. Error   [95%  Conf. Band] </span></span>
-<span><span class="co">#&gt;          -2  -0.0965     0.0410 -0.2054      0.0124 </span></span>
-<span><span class="co">#&gt;          -1   0.0339     0.0256 -0.0341      0.1019 </span></span>
-<span><span class="co">#&gt;           0   0.0091     0.0207 -0.0457      0.0639 </span></span>
-<span><span class="co">#&gt;           1   0.0149     0.0246 -0.0504      0.0803 </span></span>
-<span><span class="co">#&gt;           2   0.0058     0.0381 -0.0953      0.1070 </span></span>
+<span><span class="co">#&gt;  Event Time Estimate Std. Error   [95%  Conf. Band]  </span></span>
+<span><span class="co">#&gt;          -2  -0.0674     0.0472 -0.1896      0.0549  </span></span>
+<span><span class="co">#&gt;          -1  -0.0114     0.0364 -0.1056      0.0828  </span></span>
+<span><span class="co">#&gt;           0   0.0407     0.0327 -0.0440      0.1254  </span></span>
+<span><span class="co">#&gt;           1   0.0852     0.0296  0.0084      0.1619 *</span></span>
+<span><span class="co">#&gt;           2   0.0700     0.0598 -0.0850      0.2249  </span></span>
 <span><span class="co">#&gt; ---</span></span>
 <span><span class="co">#&gt; Signif. codes: `*' confidence band does not cover 0</span></span>
 <span><span class="fu"><a href="reference/ggcont_did.html">ggcont_did</a></span><span class="op">(</span><span class="va">cd_res_es_level</span><span class="op">)</span></span></code></pre></div>
@@ -192,7 +186,7 @@
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cd_res_es_slope</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/cont_did.html">cont_did</a></span><span class="op">(</span></span>
 <span>  yname <span class="op">=</span> <span class="st">"Y"</span>,</span>
-<span>  tname <span class="op">=</span> <span class="st">"period"</span>,</span>
+<span>  tname <span class="op">=</span> <span class="st">"time_period"</span>,</span>
 <span>  idname <span class="op">=</span> <span class="st">"id"</span>,</span>
 <span>  dname <span class="op">=</span> <span class="st">"D"</span>,</span>
 <span>  data <span class="op">=</span> <span class="va">df</span>,</span>
@@ -210,17 +204,17 @@
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">cd_res_es_slope</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Overall ACRT:  </span></span>
-<span><span class="co">#&gt;     ATT    Std. Error     [ 95%  Conf. Int.] </span></span>
-<span><span class="co">#&gt;  0.0376        0.0435    -0.0477      0.1229 </span></span>
+<span><span class="co">#&gt;     ATT    Std. Error     [ 95%  Conf. Int.]  </span></span>
+<span><span class="co">#&gt;  0.2279         0.044     0.1416      0.3142 *</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Dynamic Effects:</span></span>
-<span><span class="co">#&gt;  Event Time Estimate Std. Error   [95%  Conf. Band] </span></span>
-<span><span class="co">#&gt;          -2   0.0723     0.0510 -0.0656      0.2102 </span></span>
-<span><span class="co">#&gt;          -1   0.0036     0.0607 -0.1604      0.1676 </span></span>
-<span><span class="co">#&gt;           0   0.0862     0.0476 -0.0426      0.2150 </span></span>
-<span><span class="co">#&gt;           1   0.0448     0.0676 -0.1381      0.2277 </span></span>
-<span><span class="co">#&gt;           2   0.0457     0.1139 -0.2622      0.3537 </span></span>
+<span><span class="co">#&gt;  Event Time Estimate Std. Error   [95%  Conf. Band]  </span></span>
+<span><span class="co">#&gt;          -2  -0.6753     0.0887 -0.9011     -0.4496 *</span></span>
+<span><span class="co">#&gt;          -1   0.1956     0.0702  0.0170      0.3742 *</span></span>
+<span><span class="co">#&gt;           0   0.2690     0.0634  0.1077      0.4303 *</span></span>
+<span><span class="co">#&gt;           1   0.2985     0.0694  0.1217      0.4752 *</span></span>
+<span><span class="co">#&gt;           2  -0.0018     0.1369 -0.3502      0.3466  </span></span>
 <span><span class="co">#&gt; ---</span></span>
 <span><span class="co">#&gt; Signif. codes: `*' confidence band does not cover 0</span></span>
 <span><span class="fu"><a href="reference/ggcont_did.html">ggcont_did</a></span><span class="op">(</span><span class="va">cd_res_es_slope</span><span class="op">)</span></span></code></pre></div>

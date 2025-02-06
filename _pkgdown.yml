@@ -36,3 +36,7 @@ reference:
     contents:
       - choose_knots_even
       - choose_knots_quantile
+
+  - title: Functions to Simulate Data
+    contents:
+      - simulate_contdid_data

@@ -99,28 +99,22 @@ treatment `D` has no effect on the outcome.
 
 ``` r
 # Simulate data
-set.seed(123)
-# baseline simulation parameters
-sp <- did::reset.sim()
-# adjust some default simulation parameters
-sp$n <- 10000 # increase number of units
-sp$bett <- sp$betu <- sp$te.bet.X <- rep(0, length(sp$bett)) # no effects of covariates
-sp$te <- 0 # the effect of the treatment is 0
-df <- did::build_sim_dataset(sp)
-n <- length(unique(df$id))
-D <- runif(n, 0, 1)
-# add treatment variable, it is fully independent of everything else
-df$D <- BMisc::time_invariant_to_panel(D, df, "id")
+set.seed(1234)
+df <- simulate_contdid_data(
+  n = 5000,
+  num_time_periods = 4,
+  num_groups = 4,
+  dose_linear_effect = 0,
+  dose_quadratic_effect = 0
+)
 head(df)
-#> # A tibble: 6 × 8
-#>       G      X    id cluster period     Y treat      D
-#>   <dbl>  <dbl> <int>   <int>  <dbl> <dbl> <dbl>  <dbl>
-#> 1     4 -0.560     1      19      1  2.47     1 0.548 
-#> 2     4 -0.560     1      19      2  5.23     1 0.548 
-#> 3     4 -0.560     1      19      3  6.20     1 0.548 
-#> 4     4 -0.560     1      19      4  6.29     1 0.548 
-#> 5     3  1.56      3      16      1  2.63     1 0.0237
-#> 6     3  1.56      3      16      2  4.21     1 0.0237
+#>   id G          D time_period         Y
+#> 1  1 2 0.08593221           1 0.3579583
+#> 2  1 2 0.08593221           2 5.2354694
+#> 3  1 2 0.08593221           3 3.2717079
+#> 4  1 2 0.08593221           4 4.3988042
+#> 5  2 4 0.17217781           1 5.9743351
+#> 6  2 4 0.17217781           2 5.8463051
 ```
 
 ### Case 1: Dose Aggregation
@@ -134,7 +128,7 @@ for `ACRT(d)`.
 ``` r
 cd_res <- cont_did(
   yname = "Y",
-  tname = "period",
+  tname = "time_period",
   idname = "id",
   dname = "D",
   data = df,
@@ -152,13 +146,13 @@ cd_res <- cont_did(
 summary(cd_res)
 #> 
 #> Overall ATT:  
-#>     ATT    Std. Error     [ 95%  Conf. Int.] 
-#>  0.0067         0.027    -0.0461      0.0596 
+#>      ATT    Std. Error     [ 95%  Conf. Int.] 
+#>  -0.0265        0.0301    -0.0855      0.0325 
 #> 
 #> 
 #> Overall ACRT:  
-#>    ACRT    Std. Error     [ 95%  Conf. Int.] 
-#>  0.0376        0.0532    -0.0667      0.1419 
+#>    ACRT    Std. Error     [ 95%  Conf. Int.]  
+#>  0.1337        0.0488      0.038      0.2293 *
 #> ---
 #> Signif. codes: `*' confidence band does not cover 0
 ggcont_did(cd_res, type = "att")
@@ -185,7 +179,7 @@ Notice that the target parameter is set `level` to target ATT, and the
 ``` r
 cd_res_es_level <- cont_did(
   yname = "Y",
-  tname = "period",
+  tname = "time_period",
   idname = "id",
   dname = "D",
   data = df,
@@ -203,17 +197,17 @@ cd_res_es_level <- cont_did(
 summary(cd_res_es_level)
 #> 
 #> Overall ATT:  
-#>     ATT    Std. Error     [ 95%  Conf. Int.] 
-#>  0.0121        0.0192    -0.0255      0.0497 
+#>      ATT    Std. Error     [ 95%  Conf. Int.] 
+#>  -0.0243        0.0289    -0.0808      0.0323 
 #> 
 #> 
 #> Dynamic Effects:
 #>  Event Time Estimate Std. Error   [95%  Conf. Band] 
-#>          -2  -0.0965     0.0410 -0.2054      0.0124 
-#>          -1   0.0339     0.0256 -0.0341      0.1019 
-#>           0   0.0091     0.0207 -0.0457      0.0639 
-#>           1   0.0149     0.0246 -0.0504      0.0803 
-#>           2   0.0058     0.0381 -0.0953      0.1070 
+#>          -2  -0.0222     0.0504 -0.1488      0.1044 
+#>          -1   0.0116     0.0271 -0.0565      0.0798 
+#>           0  -0.0039     0.0299 -0.0790      0.0713 
+#>           1  -0.0160     0.0397 -0.1157      0.0837 
+#>           2  -0.0839     0.0419 -0.1891      0.0212 
 #> ---
 #> Signif. codes: `*' confidence band does not cover 0
 ggcont_did(cd_res_es_level)
@@ -229,7 +223,7 @@ Relative to the previous code, notice that the target parameter is set
 ``` r
 cd_res_es_slope <- cont_did(
   yname = "Y",
-  tname = "period",
+  tname = "time_period",
   idname = "id",
   dname = "D",
   data = df,
@@ -247,17 +241,17 @@ cd_res_es_slope <- cont_did(
 summary(cd_res_es_slope)
 #> 
 #> Overall ACRT:  
-#>     ATT    Std. Error     [ 95%  Conf. Int.] 
-#>  0.0376        0.0435    -0.0477      0.1229 
+#>     ATT    Std. Error     [ 95%  Conf. Int.]  
+#>  0.1337        0.0583     0.0194      0.2479 *
 #> 
 #> 
 #> Dynamic Effects:
-#>  Event Time Estimate Std. Error   [95%  Conf. Band] 
-#>          -2   0.0723     0.0510 -0.0656      0.2102 
-#>          -1   0.0036     0.0607 -0.1604      0.1676 
-#>           0   0.0862     0.0476 -0.0426      0.2150 
-#>           1   0.0448     0.0676 -0.1381      0.2277 
-#>           2   0.0457     0.1139 -0.2622      0.3537 
+#>  Event Time Estimate Std. Error   [95%  Conf. Band]  
+#>          -2  -0.0692     0.0811 -0.2704      0.1320  
+#>          -1  -0.2213     0.0893 -0.4427      0.0002  
+#>           0   0.1587     0.0588  0.0130      0.3044 *
+#>           1   0.0546     0.0825 -0.1500      0.2591  
+#>           2  -0.5407     0.1159 -0.8280     -0.2534 *
 #> ---
 #> Signif. codes: `*' confidence band does not cover 0
 ggcont_did(cd_res_es_slope)
