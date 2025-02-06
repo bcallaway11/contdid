@@ -1,25 +1,17 @@
-library(BMisc)
-library(did)
-
 test_that("test basic functionality", {
   # Simulate data
-  set.seed(123)
-  # baseline simulation parameters
-  sp <- did::reset.sim()
-  # adjust some default simulation parameters
-  sp$n <- 10000 # increase number of units
-  sp$bett <- sp$betu <- sp$te.bet.X <- rep(0, length(sp$bett)) # no effects of covariates
-  sp$te <- 0 # the effect of the treatment is 0
-  df <- did::build_sim_dataset(sp)
-  n <- length(unique(df$id))
-  D <- runif(n, 0, 1)
-  # add treatment variable, it is fully independent of everything else
-  df$D <- BMisc::time_invariant_to_panel(D, df, "id")
-
+  set.seed(1234)
+  df <- simulate_contdid_data(
+    n = 5000,
+    num_time_periods = 4,
+    num_groups = 4,
+    dose_linear_effect = 0,
+    dose_quadratic_effect = 0
+  )
   cd_res <- suppressWarnings(
     cont_did(
       yname = "Y",
-      tname = "period",
+      tname = "time_period",
       idname = "id",
       dname = "D",
       data = df,
@@ -45,7 +37,7 @@ test_that("test basic functionality", {
   cd_res_es_level <- suppressWarnings(
     cont_did(
       yname = "Y",
-      tname = "period",
+      tname = "time_period",
       idname = "id",
       dname = "D",
       data = df,
@@ -70,7 +62,7 @@ test_that("test basic functionality", {
   cd_res_es_slope <- suppressWarnings(
     cont_did(
       yname = "Y",
-      tname = "period",
+      tname = "time_period",
       idname = "id",
       dname = "D",
       data = df,
