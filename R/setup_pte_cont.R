@@ -63,6 +63,27 @@ setup_pte_cont <- function(yname,
     first_period_data <- data[data[[tname]] == first_period, ]
     dose <- first_period_data[[dname]]
 
+    # data sanity checks
+    #------------------------
+    # drop units that have a treatment timing but no dose
+    timing_no_dose <- data[[gname]] != 0 & data[[dname]] == 0
+    if (any(timing_no_dose)) {
+        data <- data[!timing_no_dose, ]
+        warning(paste0(
+            "Dropped ", sum(timing_no_dose),
+            " units that have a treatment timing but no dose."
+        ))
+    }
+    # set dose equal to 0 for never treated units
+    dose_but_untreated <- data[[gname]] == 0 & data[[dname]] != 0
+    if (any(dose_but_untreated)) {
+        data[[dname]][dose_but_untreated] <- 0
+        warning(paste0(
+            "Set dose equal to 0 for ", sum(dose_but_untreated),
+            " units that have a dose but were in the never treated group."
+        ))
+    }
+
     knots <- choose_knots_quantile(dose[dose > 0], num_knots)
     if (is.null(dvals)) {
         dvals <- quantile(dose[dose > 0], probs = seq(.1, .99, .01))

@@ -99,6 +99,7 @@ cont_did <- function(yname,
   if (!is.null(est_method)) stop("covariates not supported yet, set est_method=NULL")
   assert_choice(base_period, choices = c("varying", "universal"))
 
+
   # TODO: checks that dose is constant over time and that treatment is staggered
   # check for balanced panel data
 
