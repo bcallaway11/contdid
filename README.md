@@ -83,11 +83,11 @@ Next, the other important parameters are `target_parameter`,
 
 ## Examples
 
-With a continous treatment, the underlying building blocks are treatment
-effects that are local to a particular timing group `g` in a particular
-time period `t` that experienced a particular value of the treatment
-`d`. These treatment affects are relatively high-dimensional, and most
-applications are likely to involve aggregating/combining these
+With a continuous treatment, the underlying building blocks are
+treatment effects that are local to a particular timing group `g` in a
+particular time period `t` that experienced a particular value of the
+treatment `d`. These treatment affects are relatively high-dimensional,
+and most applications are likely to involve aggregating/combining these
 underlying parameters. We focus on aggregations that (i) average across
 timing-groups and time periods to given average treatment effect
 parameters as a function of the dose `d` or (ii) averages across doses
