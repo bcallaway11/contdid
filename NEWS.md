@@ -1,4 +1,4 @@
-# contdid 1.0.0
+# contdid 0.1.0
 
 * Initial CRAN submission.
 
