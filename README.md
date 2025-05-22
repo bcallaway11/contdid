@@ -23,12 +23,12 @@ library(contdid)
 ## Conceptual Setup
 
 Below, we give several examples of how to estimate causal effect
-parameters using the `cont_did` package.
+parameters using the `contdid` package.
 
 At a high level, the interface is basically the same as for the `did`
-package and for other packages that rely on the `ptetools` backend, with
-only a few pieces of additional information being required. First, the
-name of the continuous treatment variable should be passed through the
+package and for packages that rely on the `ptetools` backend, with only
+a few pieces of additional information being required. First, the name
+of the continuous treatment variable should be passed through the
 `dname` argument.
 
 The `cont_did` function expects the continuous treatment variable to
