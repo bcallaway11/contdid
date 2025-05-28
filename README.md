@@ -20,6 +20,38 @@ devtools::install_github("bcallaway11/contdid")
 library(contdid)
 ```
 
+## Package Status: Alpha Version
+
+This is an **alpha version** of the `contdid` package. The core features
+are implemented and functional, but the package remains under active
+development. The API may change, and additional functionality is
+planned.
+
+We welcome feedback and encourage users to report bugs or other issues
+via the [GitHub Issues
+page](https://github.com/bcallaway11/contdid/issues).
+
+### ✅ Currently Supported
+
+- ☑️ Continuous treatments
+- ☑️ Staggered treatment adoption (i.e., more than two periods and
+  variation in timing across units)
+- ☑️ Aggregations into dose-specific ATT’s or ACRT’s
+- ☑️ Aggregations into ATT or ACRT versions of event studies
+- ☑️ User-specified flexible parametric models for treatment effects as
+  a function of the dose
+
+### 🚫 Not Yet Supported
+
+- ❌ Discrete treatments *Note: This is straightforward and could be
+  implemented by users directly.*
+- ❌ Data-driven models for treatment effects as a function of the dose
+- ❌ Repeated cross-sections data
+- ❌ Unbalanced panel data
+- ❌ Doses that vary over time *Note: We may never support this, or only
+  support it in limited contexts.*
+- ❌ Including covariates
+
 ## Conceptual Setup
 
 Below, we give several examples of how to estimate causal effect
