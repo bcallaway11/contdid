@@ -16,7 +16,9 @@ Imports:
     checkmate,
     splines2,
     sandwich,
-    ggplot2
+    ggplot2,
+    MASS,
+    npiv
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 URL:

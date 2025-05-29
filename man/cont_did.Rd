@@ -15,6 +15,7 @@ cont_did(
   target_parameter = c("level", "slope"),
   aggregation = c("dose", "eventstudy", "none"),
   treatment_type = c("continuous", "discrete"),
+  dose_est_method = c("parametric", "cck"),
   dvals = NULL,
   degree = 1,
   num_knots = 0,
@@ -78,6 +79,12 @@ positive amount of the treatment) and reporting an event study.}
 \item{treatment_type}{"continuous" or "discrete" depending on the nature of the treatment.
 Default is "continuous".  "discrete" is not yet supported.}
 
+\item{dose_est_method}{The method used to estimate the dose-specific effects.  The default
+is "parametric", where the user needs to specify the number of knots and degree for
+a B-spline which is assumed to be correctly specified.  The other option is "cck"
+which uses the a data-driven nonparametric method to estimate the dose-specific effects
+based on the \code{npiv} package and Chen, Christensen, and Kankanala (ReStud, 2025).}
+
 \item{dvals}{The values of the treatment at which to compute dose-specific effects.
 If it is not specified, the default choice will be use the percentiles of the dose among
 all ever-treated units.}
@@ -89,8 +96,8 @@ nonparametric or flexible parametric estimation, a good option is to set
 \code{degree=3}.}
 
 \item{num_knots}{The number of knots to include for the B-Spline.  The default is 0
-so that the spline is global.  There is a bias-variance tradeoff for including
-more or less knots.}
+so that the spline is global (i.e., this will amount to fitting a global polynomial).
+There is a bias-variance tradeoff for including more or less knots.}
 
 \item{allow_unbalanced_panel}{Whether or not function should
 "balance" the panel with respect to time and id.  The default

@@ -38,6 +38,12 @@
 #' @param treatment_type "continuous" or "discrete" depending on the nature of the treatment.
 #'  Default is "continuous".  "discrete" is not yet supported.
 #'
+#' @param dose_est_method The method used to estimate the dose-specific effects.  The default
+#'  is "parametric", where the user needs to specify the number of knots and degree for
+#'  a B-spline which is assumed to be correctly specified.  The other option is "cck"
+#'  which uses the a data-driven nonparametric method to estimate the dose-specific effects
+#'  based on the `npiv` package and Chen, Christensen, and Kankanala (ReStud, 2025).
+#'
 #' @param dvals The values of the treatment at which to compute dose-specific effects.
 #'  If it is not specified, the default choice will be use the percentiles of the dose among
 #'  all ever-treated units.
@@ -49,8 +55,8 @@
 #'  `degree=3`.
 #'
 #' @param num_knots The number of knots to include for the B-Spline.  The default is 0
-#'  so that the spline is global.  There is a bias-variance tradeoff for including
-#'  more or less knots.
+#'  so that the spline is global (i.e., this will amount to fitting a global polynomial).
+#' There is a bias-variance tradeoff for including more or less knots.
 #'
 #' @return cont_did_obj
 #' @export
@@ -64,6 +70,7 @@ cont_did <- function(yname,
                      target_parameter = c("level", "slope"),
                      aggregation = c("dose", "eventstudy", "none"),
                      treatment_type = c("continuous", "discrete"),
+                     dose_est_method = c("parametric", "cck"),
                      dvals = NULL,
                      degree = 1,
                      num_knots = 0,
@@ -98,7 +105,8 @@ cont_did <- function(yname,
   if (!is.null(clustervars)) warning("two-way clustering not currently supported")
   if (!is.null(est_method)) stop("covariates not supported yet, set est_method=NULL")
   assert_choice(base_period, choices = c("varying", "universal"))
-
+  dose_est_method <- dose_est_method[1]
+  assert_choice(dose_est_method, choices = c("parametric", "cck"))
 
   # TODO: checks that dose is constant over time and that treatment is staggered
   # check for balanced panel data
@@ -133,6 +141,166 @@ cont_did <- function(yname,
     gname <- ".G"
   }
 
+  # cck estimator not supported with staggered adoption yet
+  if (dose_est_method == "cck") {
+    if (length(unique(data[[gname]])) != 2) {
+      stop("cck estimator not supported with staggered adoption yet")
+    }
+
+    if (length(unique(data[[tname]])) != 2) {
+      stop("cck estimator not supported with more than two time periods. consider averaging across pre and post treatment periods")
+    }
+
+    if (aggregation != "dose") {
+      stop("event study not supported with cck estimator yet")
+    }
+
+    data <- BMisc::make_balanced_panel(data, idname, tname)
+    data$.dy <- BMisc::get_first_difference(data, idname, yname, tname)
+    maxT <- max(data[[tname]])
+    post_data <- subset(data, data[[tname]] == maxT)
+    dose <- post_data[[dname]]
+    dy <- post_data$.dy
+    m0 <- mean(dy[dose == 0])
+    dy_centered <- dy - m0
+    if (is.null(dvals)) {
+      # choose dvals the same way as npiv::npiv
+      # see line 733 https://github.com/JeffreyRacine/npiv/blob/main/R/npiv.R
+      dvals <- seq(min(dose[dose > 0]),
+        max(dose[dose > 0]),
+        length.out = 50
+      )
+    }
+
+    # just going to run code here
+    cck_res <- npiv::npiv(
+      Y = dy_centered[dose > 0],
+      X = dose[dose > 0],
+      W = dose[dose > 0],
+      X.grid = dvals,
+      knots = "quantile",
+      boot.num = 999,
+      J.x.degree = 3,
+      K.w.degree = 3
+    )
+
+    att.d <- cck_res$h
+    att.d_se <- cck_res$asy.se
+    # back out implied uniform cband critical value from reported upper bound
+    att.d_crit.val <- as.numeric((cck_res$h.upper - att.d) / att.d_se)[1]
+
+
+    acrt.d <- cck_res$deriv
+    acrt.d_se <- cck_res$deriv.asy.se
+    # back out implied uniform cband critical value from reported upper bound
+    acrt.d_crit.val <- as.numeric((cck_res$h.upper.deriv - acrt.d) / acrt.d_se)[1]
+
+    if (!cband) {
+      att.d_crit.val <- qnorm(1 - alp / 2)
+      att.d_crit.val <- qnorm(1 - alp / 2)
+    }
+
+    # Compute average ACR
+    average_acr <- mean(cck_res$deriv)
+
+    # Get splines for dosage
+    spline_dosage <- npiv::gsl.bs(cck_res$W[, drop = FALSE],
+      degree = cck_res$K.w.degree,
+      nbreak = (cck_res$K.w.segments + 1),
+      knots = as.numeric(quantile(cck_res$W[, drop = FALSE],
+        probs = seq(0, 1, length = (cck_res$K.w.segments + 1))
+      )),
+      deriv = 0,
+      intercept = TRUE
+    )
+    # Sample size
+    n_treated <- length(cck_res$Y)
+    # compute influence function of spline beta
+    infl_reg <- as.numeric(cck_res$Y - cck_res$h) *
+      spline_dosage %*% (MASS::ginv(t(spline_dosage) %*% spline_dosage / n_treated))
+
+    # Now, compute the average of the spline derivatives
+    average_spline_deriv <- colMeans(npiv::gsl.bs(cck_res$W[, drop = FALSE],
+      degree = cck_res$K.w.degree,
+      nbreak = (cck_res$K.w.segments + 1),
+      knots = as.numeric(quantile(cck_res$W[, drop = FALSE], probs = seq(0, 1, length = (cck_res$K.w.segments + 1)))),
+      deriv = 1,
+      intercept = TRUE
+    ))
+    # Now, put all terms together to get the influence function of the average ACR
+    infl_avg_acr <- (cck_res$deriv - mean(cck_res$deriv)) + infl_reg %*% average_spline_deriv
+
+    # Compute stanrd error
+    se_avg_acr <- sd(infl_avg_acr) / sqrt(n_treated)
+
+    ptep <- setup_pte_cont(
+      yname = yname,
+      gname = gname,
+      tname = tname,
+      dname = dname,
+      idname = idname,
+      data = data,
+      target_parameter = target_parameter,
+      aggregation = aggregation,
+      treatment_type = treatment_type,
+      dose_est_method = dose_est_method,
+      cband = cband,
+      alp = alp,
+      boot_type = boot_type,
+      gt_type = gt_type,
+      weightsname = weightsname,
+      biters = biters,
+      cl = cl,
+      call = call,
+      ...
+    )
+
+    overall_att_res <- suppressWarnings(
+      ptetools::pte_default(
+        yname = ptep$yname,
+        gname = ptep$gname,
+        tname = ptep$tname,
+        idname = ptep$idname,
+        data = ptep$data,
+        d_outcome = TRUE,
+        anticipation = ptep$anticipation,
+        base_period = ptep$base_period,
+        control_group = ptep$control_group,
+        weightsname = ptep$weightsname,
+        biters = ptep$biters,
+        alp = ptep$alp
+      )
+    )
+
+    dose_order <- order(dose[dose > 0])
+    dose_out <- dose[dose > 0][dose_order]
+    att.d <- att.d[dose_order]
+    att.d_se <- att.d_se[dose_order]
+    acrt.d <- acrt.d[dose_order]
+    acrt.d_se <- acrt.d_se[dose_order]
+
+    out <- dose_obj(
+      dose = dose_out,
+      overall_att = overall_att_res$overall_att$overall.att,
+      overall_att_se = overall_att_res$overall_att$overall.se,
+      overall_att_inffunc = overall_att_res$overall_att$inf.func[[1]],
+      overall_acrt = average_acr,
+      overall_acrt_se = se_avg_acr,
+      overall_acrt_inffunc = infl_avg_acr,
+      att.d = att.d,
+      att.d_se = att.d_se,
+      att.d_crit.val = att.d_crit.val,
+      att.d_inffunc = NULL,
+      acrt.d = acrt.d,
+      acrt.d_se = acrt.d_se,
+      acrt.d_crit.val = acrt.d_crit.val,
+      acrt.d_inffunc = NULL,
+      pte_params = ptep
+    )
+
+    return(out)
+  }
+
   res <- pte(
     yname = yname,
     gname = gname,
@@ -146,7 +314,9 @@ cont_did <- function(yname,
     target_parameter = target_parameter,
     aggregation = aggregation,
     treatment_type = treatment_type,
+    dose_est_method = dose_est_method,
     anticipation = anticipation,
+    dose_est_method = dose_est_method,
     gt_type = gt_type,
     cband = cband,
     alp = alp,
@@ -188,6 +358,11 @@ cont_did_acrt <- function(
   post_data <- with(gt_data, subset(gt_data, name == "post"))
   dose <- post_data$D
   dy <- post_data$dy
+
+  dose_est_method <- list(...)$dose_est_method
+  if (dose_est_method == "cck") {
+    stop("cck estimator not supported with staggered adoption yet")
+  }
 
   # if they were previously saved in shared_env, recover calculated knots
   if (!is.null(shared_env$knots)) {

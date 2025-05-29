@@ -43,13 +43,26 @@ page](https://github.com/bcallaway11/contdid/issues).
 
 ### 🚫 Not Yet Supported
 
-- ❌ Discrete treatments *Note: This is straightforward and could be
-  implemented by users directly.*
-- ❌ Data-driven models for treatment effects as a function of the dose
+- ❌ Discrete treatments
+
+  - This is straightforward and could be implemented by users directly,
+    but we don’t have it in the package yet.
+
+- ⚠️ Data-driven models for treatment effects as a function of the dose
+
+  - We have this working for cases without staggered adoption, but it is
+    not yet implemented for staggered adoption. We plan to add this in
+    the future.
+
 - ❌ Repeated cross-sections data
+
 - ❌ Unbalanced panel data
-- ❌ Doses that vary over time *Note: We may never support this, or only
-  support it in limited contexts.*
+
+- ❌ Doses that vary over time
+
+  - Not sure if we will ever support this, or maybe only in limited
+    contexts.\_
+
 - ❌ Including covariates
 
 ## Conceptual Setup
@@ -184,7 +197,7 @@ summary(cd_res)
 #> 
 #> Overall ACRT:  
 #>    ACRT    Std. Error     [ 95%  Conf. Int.]  
-#>  0.1337        0.0488      0.038      0.2293 *
+#>  0.1341        0.0485      0.039      0.2293 *
 #> ---
 #> Signif. codes: `*' confidence band does not cover 0
 ggcont_did(cd_res, type = "att")
@@ -274,19 +287,117 @@ summary(cd_res_es_slope)
 #> 
 #> Overall ACRT:  
 #>     ATT    Std. Error     [ 95%  Conf. Int.]  
-#>  0.1337        0.0583     0.0194      0.2479 *
+#>  0.1341        0.0584     0.0197      0.2485 *
 #> 
 #> 
 #> Dynamic Effects:
 #>  Event Time Estimate Std. Error   [95%  Conf. Band]  
-#>          -2  -0.0692     0.0811 -0.2704      0.1320  
-#>          -1  -0.2213     0.0893 -0.4427      0.0002  
-#>           0   0.1587     0.0588  0.0130      0.3044 *
-#>           1   0.0546     0.0825 -0.1500      0.2591  
-#>           2  -0.5407     0.1159 -0.8280     -0.2534 *
+#>          -2  -0.0701     0.0808 -0.2710      0.1308  
+#>          -1  -0.2212     0.0892 -0.4431      0.0007  
+#>           0   0.1592     0.0586  0.0136      0.3048 *
+#>           1   0.0551     0.0828 -0.1509      0.2610  
+#>           2  -0.5405     0.1154 -0.8275     -0.2535 *
 #> ---
 #> Signif. codes: `*' confidence band does not cover 0
 ggcont_did(cd_res_es_slope)
 ```
 
 <img src="man/figures/README-unnamed-chunk-7-1.png" width="100%" />
+
+### Case 3: Data-Driven Nonparametric Model for Treatment Effects
+
+In most applications, it is hard to know the correct functional form for
+the treatment effects as a function of the dose. In Callaway,
+Goodman-Bacon, and Sant’Anna (2025), the approach we emphasize comes
+from Chen, Christensen, and Kankanala (2025), and the `contdid` package
+uses their [`npiv` package](https://github.com/JeffreyRacine/npiv) to
+implement this approach. Code-wise, the only thing to change is to set
+the argument `dose_est_method="cck"`. \[Note that we currently only
+support this option for the case with two periods and no staggered
+adoption. With more periods, you can average the pre- and post-treatment
+periods to reduce it to a two period case and then run the code below;
+in fact, this is what we did in the application in our paper.\]
+
+``` r
+# simulate data with only two periods
+# add quadratic effect to see how well we can detect it
+# (note code will not "know" that the effect is quadratic)
+df2 <- simulate_contdid_data(
+  n = 5000,
+  num_time_periods = 2,
+  num_groups = 2,
+  dose_linear_effect = 0,
+  dose_quadratic_effect = 1
+)
+df2$D[df2$G == 0] <- 0
+head(df2)
+#>   id G        D time_period           Y
+#> 1  1 2 0.890987           1  1.84272906
+#> 2  1 2 0.890987           2  5.30890209
+#> 3  2 0 0.000000           1  0.59423237
+#> 4  2 0 0.000000           2  2.81443324
+#> 5  3 0 0.000000           1  1.77438193
+#> 6  3 0 0.000000           2 -0.01032246
+
+cd_res_cck <- cont_did(
+  yname = "Y",
+  tname = "time_period",
+  idname = "id",
+  dname = "D",
+  data = df2,
+  gname = "G",
+  target_parameter = "level",
+  aggregation = "dose",
+  treatment_type = "continuous",
+  dose_est_method = "cck",
+  control_group = "notyettreated",
+  biters = 100,
+  cband = TRUE,
+)
+
+summary(cd_res_cck)
+#> 
+#> Overall ATT:  
+#>     ATT    Std. Error     [ 95%  Conf. Int.]  
+#>  0.3399         0.037     0.2673      0.4125 *
+#> 
+#> 
+#> Overall ACRT:  
+#>    ACRT    Std. Error     [ 95%  Conf. Int.]  
+#>  0.6595        0.1853     0.2964      1.0226 *
+#> ---
+#> Signif. codes: `*' confidence band does not cover 0
+ggcont_did(cd_res_cck) +
+  stat_function(
+    fun = function(x) x^2,
+    aes(color = "Truth"),
+    linetype = "dashed",
+    size = 1
+  ) +
+  scale_color_manual(values = c("Truth" = "red")) +
+  labs(color = "")
+```
+
+<img src="man/figures/README-unnamed-chunk-8-1.png" width="100%" />
+
+## References
+
+<div id="refs" class="references csl-bib-body hanging-indent">
+
+<div id="ref-callaway-goodman-santanna-2025" class="csl-entry">
+
+Callaway, Brantly, Andrew Goodman-Bacon, and Pedro H. C. Sant’Anna.
+2025. “Difference-in-Differences with a Continuous Treatment.”
+
+</div>
+
+<div id="ref-chen-christensen-kankanala-2025" class="csl-entry">
+
+Chen, Xiaohong, Timothy Christensen, and Sid Kankanala. 2025. “Adaptive
+Estimation and Uniform Confidence Bands for Nonparametric Structural
+Functions and Elasticities.” *Review of Economic Studies* 92 (1):
+162–96.
+
+</div>
+
+</div>

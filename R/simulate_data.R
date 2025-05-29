@@ -96,5 +96,7 @@ simulate_contdid_data <- function(
         values_to = "Y"
     ) |> as.data.frame()
 
+    df2$D[df2$G == 0] <- 0 # set dose to 0 for never treated units
+
     df2
 }

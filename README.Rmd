@@ -1,8 +1,41 @@
 ---
 output: github_document
+references:
+  - id: callaway-goodman-santanna-2025
+    title: "Difference-in-Differences with a Continuous Treatment"
+    author:
+      - family: Callaway
+        given: Brantly
+      - family: Goodman-Bacon
+        given: Andrew
+      - family: Sant'Anna
+        given: Pedro H. C.
+    issued:
+      year: 2025
+    type: unpublished
+    note: "Working paper"
+  - id: chen-christensen-kankanala-2025
+    title: "Adaptive Estimation and Uniform Confidence Bands for Nonparametric Structural Functions and Elasticities"
+    author:
+      - family: Chen
+        given: Xiaohong
+      - family: Christensen
+        given: Timothy
+      - family: Kankanala
+        given: Sid
+    issued:
+      year: 2025
+    container-title: "Review of Economic Studies"
+    volume: 92
+    issue: 1
+    page: 162–196
+    type: article-journal
+
 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
+
+
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -48,12 +81,19 @@ We welcome feedback and encourage users to report bugs or other issues via the [
 ### 🚫 Not Yet Supported
 
 - ❌ Discrete treatments
-  _Note: This is straightforward and could be implemented by users directly._
-- ❌ Data-driven models for treatment effects as a function of the dose
+
+  - This is straightforward and could be implemented by users directly, but we don't have it in the package yet.
+
+- ⚠️ Data-driven models for treatment effects as a function of the dose
+
+  - We have this working for cases without staggered adoption, but it is not yet implemented for staggered adoption.  We plan to add this in the future.
+
 - ❌ Repeated cross-sections data
 - ❌ Unbalanced panel data
 - ❌ Doses that vary over time
-  _Note: We may never support this, or only support it in limited contexts._
+
+  - Not sure if we will ever support this, or maybe only in limited contexts._
+
 - ❌ Including covariates
 
 
@@ -186,3 +226,51 @@ cd_res_es_slope <- cont_did(
 summary(cd_res_es_slope)
 ggcont_did(cd_res_es_slope)
 ```
+
+### Case 3: Data-Driven Nonparametric Model for Treatment Effects
+
+In most applications, it is hard to know the correct functional form for the treatment effects as a function of the dose.  In @callaway-goodman-santanna-2025, the approach we emphasize comes from @chen-christensen-kankanala-2025, and the `contdid` package uses their [`npiv` package](https://github.com/JeffreyRacine/npiv) to implement this approach.  Code-wise, the only thing to change is to set the argument `dose_est_method="cck"`.  [Note that we currently only support this option for the case with two periods and no staggered adoption.  With more periods, you can average the pre- and post-treatment periods to reduce it to a two period case and then run the code below; in fact, this is what we did in the application in our paper.]
+
+```{r, warning=FALSE, message=FALSE, cache=TRUE}
+# simulate data with only two periods
+# add quadratic effect to see how well we can detect it
+# (note code will not "know" that the effect is quadratic)
+df2 <- simulate_contdid_data(
+  n = 5000,
+  num_time_periods = 2,
+  num_groups = 2,
+  dose_linear_effect = 0,
+  dose_quadratic_effect = 1
+)
+df2$D[df2$G == 0] <- 0
+head(df2)
+
+cd_res_cck <- cont_did(
+  yname = "Y",
+  tname = "time_period",
+  idname = "id",
+  dname = "D",
+  data = df2,
+  gname = "G",
+  target_parameter = "level",
+  aggregation = "dose",
+  treatment_type = "continuous",
+  dose_est_method = "cck",
+  control_group = "notyettreated",
+  biters = 100,
+  cband = TRUE,
+)
+
+summary(cd_res_cck)
+ggcont_did(cd_res_cck) +
+  stat_function(
+    fun = function(x) x^2,
+    aes(color = "Truth"),
+    linetype = "dashed",
+    size = 1
+  ) +
+  scale_color_manual(values = c("Truth" = "red")) +
+  labs(color = "")
+```
+
+## References

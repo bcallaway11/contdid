@@ -79,14 +79,27 @@
 <h3 id="id_-not-yet-supported">🚫 Not Yet Supported<a class="anchor" aria-label="anchor" href="#id_-not-yet-supported"></a>
 </h3>
 <ul>
-<li>❌ Discrete treatments <em>Note: This is straightforward and could be implemented by users directly.</em>
+<li>
+<p>❌ Discrete treatments</p>
+<ul>
+<li>This is straightforward and could be implemented by users directly, but we don’t have it in the package yet.</li>
+</ul>
 </li>
-<li>❌ Data-driven models for treatment effects as a function of the dose</li>
-<li>❌ Repeated cross-sections data</li>
-<li>❌ Unbalanced panel data</li>
-<li>❌ Doses that vary over time <em>Note: We may never support this, or only support it in limited contexts.</em>
+<li>
+<p>⚠️ Data-driven models for treatment effects as a function of the dose</p>
+<ul>
+<li>We have this working for cases without staggered adoption, but it is not yet implemented for staggered adoption. We plan to add this in the future.</li>
+</ul>
 </li>
-<li>❌ Including covariates</li>
+<li><p>❌ Repeated cross-sections data</p></li>
+<li><p>❌ Unbalanced panel data</p></li>
+<li>
+<p>❌ Doses that vary over time</p>
+<ul>
+<li>Not sure if we will ever support this, or maybe only in limited contexts._</li>
+</ul>
+</li>
+<li><p>❌ Including covariates</p></li>
 </ul>
 </div>
 </div>
@@ -162,7 +175,7 @@
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Overall ACRT:  </span></span>
 <span><span class="co">#&gt;    ACRT    Std. Error     [ 95%  Conf. Int.]  </span></span>
-<span><span class="co">#&gt;  0.1337        0.0488      0.038      0.2293 *</span></span>
+<span><span class="co">#&gt;  0.1341        0.0485      0.039      0.2293 *</span></span>
 <span><span class="co">#&gt; ---</span></span>
 <span><span class="co">#&gt; Signif. codes: `*' confidence band does not cover 0</span></span>
 <span><span class="fu"><a href="reference/ggcont_did.html">ggcont_did</a></span><span class="op">(</span><span class="va">cd_res</span>, type <span class="op">=</span> <span class="st">"att"</span><span class="op">)</span></span></code></pre></div>
@@ -237,20 +250,96 @@
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Overall ACRT:  </span></span>
 <span><span class="co">#&gt;     ATT    Std. Error     [ 95%  Conf. Int.]  </span></span>
-<span><span class="co">#&gt;  0.1337        0.0583     0.0194      0.2479 *</span></span>
+<span><span class="co">#&gt;  0.1341        0.0584     0.0197      0.2485 *</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Dynamic Effects:</span></span>
 <span><span class="co">#&gt;  Event Time Estimate Std. Error   [95%  Conf. Band]  </span></span>
-<span><span class="co">#&gt;          -2  -0.0692     0.0811 -0.2704      0.1320  </span></span>
-<span><span class="co">#&gt;          -1  -0.2213     0.0893 -0.4427      0.0002  </span></span>
-<span><span class="co">#&gt;           0   0.1587     0.0588  0.0130      0.3044 *</span></span>
-<span><span class="co">#&gt;           1   0.0546     0.0825 -0.1500      0.2591  </span></span>
-<span><span class="co">#&gt;           2  -0.5407     0.1159 -0.8280     -0.2534 *</span></span>
+<span><span class="co">#&gt;          -2  -0.0701     0.0808 -0.2710      0.1308  </span></span>
+<span><span class="co">#&gt;          -1  -0.2212     0.0892 -0.4431      0.0007  </span></span>
+<span><span class="co">#&gt;           0   0.1592     0.0586  0.0136      0.3048 *</span></span>
+<span><span class="co">#&gt;           1   0.0551     0.0828 -0.1509      0.2610  </span></span>
+<span><span class="co">#&gt;           2  -0.5405     0.1154 -0.8275     -0.2535 *</span></span>
 <span><span class="co">#&gt; ---</span></span>
 <span><span class="co">#&gt; Signif. codes: `*' confidence band does not cover 0</span></span>
 <span><span class="fu"><a href="reference/ggcont_did.html">ggcont_did</a></span><span class="op">(</span><span class="va">cd_res_es_slope</span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README-unnamed-chunk-7-1.png" width="100%"></p>
+</div>
+<div class="section level3">
+<h3 id="case-3-data-driven-nonparametric-model-for-treatment-effects">Case 3: Data-Driven Nonparametric Model for Treatment Effects<a class="anchor" aria-label="anchor" href="#case-3-data-driven-nonparametric-model-for-treatment-effects"></a>
+</h3>
+<p>In most applications, it is hard to know the correct functional form for the treatment effects as a function of the dose. In Callaway, Goodman-Bacon, and Sant’Anna (2025), the approach we emphasize comes from Chen, Christensen, and Kankanala (2025), and the <code>contdid</code> package uses their <a href="https://github.com/JeffreyRacine/npiv" class="external-link"><code>npiv</code> package</a> to implement this approach. Code-wise, the only thing to change is to set the argument <code>dose_est_method="cck"</code>. [Note that we currently only support this option for the case with two periods and no staggered adoption. With more periods, you can average the pre- and post-treatment periods to reduce it to a two period case and then run the code below; in fact, this is what we did in the application in our paper.]</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># simulate data with only two periods</span></span>
+<span><span class="co"># add quadratic effect to see how well we can detect it</span></span>
+<span><span class="co"># (note code will not "know" that the effect is quadratic)</span></span>
+<span><span class="va">df2</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/simulate_contdid_data.html">simulate_contdid_data</a></span><span class="op">(</span></span>
+<span>  n <span class="op">=</span> <span class="fl">5000</span>,</span>
+<span>  num_time_periods <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  num_groups <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  dose_linear_effect <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  dose_quadratic_effect <span class="op">=</span> <span class="fl">1</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">df2</span><span class="op">$</span><span class="va">D</span><span class="op">[</span><span class="va">df2</span><span class="op">$</span><span class="va">G</span> <span class="op">==</span> <span class="fl">0</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">0</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">df2</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   id G        D time_period           Y</span></span>
+<span><span class="co">#&gt; 1  1 2 0.890987           1  1.84272906</span></span>
+<span><span class="co">#&gt; 2  1 2 0.890987           2  5.30890209</span></span>
+<span><span class="co">#&gt; 3  2 0 0.000000           1  0.59423237</span></span>
+<span><span class="co">#&gt; 4  2 0 0.000000           2  2.81443324</span></span>
+<span><span class="co">#&gt; 5  3 0 0.000000           1  1.77438193</span></span>
+<span><span class="co">#&gt; 6  3 0 0.000000           2 -0.01032246</span></span>
+<span></span>
+<span><span class="va">cd_res_cck</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/cont_did.html">cont_did</a></span><span class="op">(</span></span>
+<span>  yname <span class="op">=</span> <span class="st">"Y"</span>,</span>
+<span>  tname <span class="op">=</span> <span class="st">"time_period"</span>,</span>
+<span>  idname <span class="op">=</span> <span class="st">"id"</span>,</span>
+<span>  dname <span class="op">=</span> <span class="st">"D"</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">df2</span>,</span>
+<span>  gname <span class="op">=</span> <span class="st">"G"</span>,</span>
+<span>  target_parameter <span class="op">=</span> <span class="st">"level"</span>,</span>
+<span>  aggregation <span class="op">=</span> <span class="st">"dose"</span>,</span>
+<span>  treatment_type <span class="op">=</span> <span class="st">"continuous"</span>,</span>
+<span>  dose_est_method <span class="op">=</span> <span class="st">"cck"</span>,</span>
+<span>  control_group <span class="op">=</span> <span class="st">"notyettreated"</span>,</span>
+<span>  biters <span class="op">=</span> <span class="fl">100</span>,</span>
+<span>  cband <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">cd_res_cck</span><span class="op">)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Overall ATT:  </span></span>
+<span><span class="co">#&gt;     ATT    Std. Error     [ 95%  Conf. Int.]  </span></span>
+<span><span class="co">#&gt;  0.3399         0.037     0.2673      0.4125 *</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Overall ACRT:  </span></span>
+<span><span class="co">#&gt;    ACRT    Std. Error     [ 95%  Conf. Int.]  </span></span>
+<span><span class="co">#&gt;  0.6595        0.1853     0.2964      1.0226 *</span></span>
+<span><span class="co">#&gt; ---</span></span>
+<span><span class="co">#&gt; Signif. codes: `*' confidence band does not cover 0</span></span>
+<span><span class="fu"><a href="reference/ggcont_did.html">ggcont_did</a></span><span class="op">(</span><span class="va">cd_res_cck</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">stat_function</span><span class="op">(</span></span>
+<span>    fun <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="va">x</span><span class="op">^</span><span class="fl">2</span>,</span>
+<span>    <span class="fu">aes</span><span class="op">(</span>color <span class="op">=</span> <span class="st">"Truth"</span><span class="op">)</span>,</span>
+<span>    linetype <span class="op">=</span> <span class="st">"dashed"</span>,</span>
+<span>    size <span class="op">=</span> <span class="fl">1</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">scale_color_manual</span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Truth"</span> <span class="op">=</span> <span class="st">"red"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">labs</span><span class="op">(</span>color <span class="op">=</span> <span class="st">""</span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/README-unnamed-chunk-8-1.png" width="100%"></p>
+</div>
+</div>
+<div class="section level2">
+<h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
+</h2>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-callaway-goodman-santanna-2025" class="csl-entry">
+Callaway, Brantly, Andrew Goodman-Bacon, and Pedro H. C. Sant’Anna. 2025. “Difference-in-Differences with a Continuous Treatment.”
+</div>
+<div id="ref-chen-christensen-kankanala-2025" class="csl-entry">
+Chen, Xiaohong, Timothy Christensen, and Sid Kankanala. 2025. “Adaptive Estimation and Uniform Confidence Bands for Nonparametric Structural Functions and Elasticities.” <em>Review of Economic Studies</em> 92 (1): 162–96.
+</div>
 </div>
 </div>
 </div>
