@@ -21,6 +21,22 @@ authors:
 - family-names: Sant'Anna
   given-names: Pedro H. C.
   email: pedro.h.santanna@emory.edu
+preferred-citation:
+  type: manual
+  title: Difference-in-Differences with a Continuous Treatment
+  authors:
+  - family-names: Callaway
+    given-names: Brantly
+    email: brantly.callaway@uga.edu
+  - family-names: Goodman-Bacon
+    given-names: Andrew
+    email: andrew@goodman-bacon.com
+  - family-names: Sant'Anna
+    given-names: Pedro H. C.
+    email: pedro.h.santanna@emory.edu
+  year: '2025'
+  notes: R package version 0.1.0
+  url: https://bcallaway11.github.io/contdid/
 repository-code: https://github.com/bcallaway11/contdid
 url: https://bcallaway11.github.io/contdid/
 contact:
