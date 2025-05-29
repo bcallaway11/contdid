@@ -11,7 +11,7 @@ An R package for difference-in-differences with a continuous treatment.
 ## Installation
 
 You can install the development version of contdid from
-[GitHub](https://github.com/) with:
+[GitHub](https://github.com/bcallaway11/contdid) with:
 
 ``` r
 # install.packages("devtools")
