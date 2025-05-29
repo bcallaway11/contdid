@@ -30,7 +30,6 @@ jobs:
           Rscript -e 'install.packages(c("cffr", "desc"))'
 
       - name: Update inst/CITATION
-              - name: Update inst/CITATION
         run: |
           Rscript -e '
             library(desc)
