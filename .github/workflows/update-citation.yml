@@ -30,59 +30,38 @@ jobs:
           Rscript -e 'install.packages(c("cffr", "desc"))'
 
       - name: Update inst/CITATION
-        run: |
-          Rscript -e '
-          library(desc);
-          # Read package metadata
-          package_title <- desc::desc_get("Title")
-          authors <- desc::desc_get("Authors@R")
-          version <- desc::desc_get("Version")
-          url <- desc::desc_get("URL")
-          year <- format(Sys.Date(), "%Y")  # Get current year
-
-          # Generate citation content dynamically
-          citation_text <- sprintf("citHeader(\"To cite this package, use:\")\n\n
-          bibentry(\n
-            bibtype = \"Manual\",\n
-            title = \"%s\",\n
-            author = %s,\n
-            year = \"%s\",\n
-            note = \"R package version %s\",\n
-            url = \"%s\"
-          )", package_title, authors, year, version, url)
-
-          # Write the updated citation file
-          writeLines(citation_text, "inst/CITATION")'
-
-      - name: Update inst/CITATION
+              - name: Update inst/CITATION
         run: |
           Rscript -e '
             library(desc)
 
             d <- desc::desc(file = "DESCRIPTION")
             title <- d$get("Title")
-            authors <- d$get("Authors@R")[[1]]
             version <- d$get("Version")
             urls <- strsplit(d$get("URL"), ",")[[1]]
-            url <- trimws(urls[1])  # Use only the first URL
+            url <- trimws(urls[1])
             year <- format(Sys.Date(), "%Y")
 
-            lines <- c(
+            # Get Authors@R as text
+            authors <- d$get_field("Authors@R")
+
+            citation_lines <- c(
               "citHeader(\"To cite this package, use:\")",
               "",
               "bibentry(",
               "  bibtype = \"Manual\",",
               sprintf("  title = \"%s\",", title),
-              "  author = ",
-              paste0("    ", deparse(authors), collapse = "\n"),
+              "  author = ",  # no comma
+              paste0("    ", authors, ","),
               sprintf("  year = \"%s\",", year),
               sprintf("  note = \"R package version %s\",", version),
               sprintf("  url = \"%s\"", url),
               ")"
             )
 
-            writeLines(lines, con = "inst/CITATION")
+            writeLines(citation_lines, con = "inst/CITATION")
           '
+
 
       - name: Update CITATION.cff
         run: |

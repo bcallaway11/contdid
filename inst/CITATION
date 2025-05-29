@@ -3,8 +3,8 @@ citHeader("To cite this package, use:")
 bibentry(
   bibtype = "Manual",
   title = "Difference-in-Differences with a Continuous Treatment",
-  author = 
-    "c(person(\"Brantly\", \"Callaway\", email = \"brantly.callaway@uga.edu\", role = c(\"aut\", \"cre\")),\n             person(\"Andrew\", \"Goodman-Bacon\", email = \"andrew@goodman-bacon.com\", role = c(\"aut\")),\n             person(\"Pedro H. C.\", \"Sant'Anna\", email=\"pedro.h.santanna@emory.edu\", role = c(\"aut\")))"
+  author =
+    c(person("Brantly", "Callaway", email = "brantly.callaway@uga.edu", role = c("aut", "cre")), person("Andrew", "Goodman-Bacon", email = "andrew@goodman-bacon.com", role = c("aut")), person("Pedro H. C.", "Sant'Anna", email="pedro.h.santanna@emory.edu", role = c("aut"))),
   year = "2025",
   note = "R package version 0.1.0",
   url = "https://bcallaway11.github.io/contdid/"
