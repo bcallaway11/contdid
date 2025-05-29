@@ -1,0 +1,78 @@
+# --------------------------------------------
+# CITATION file created with {cffr} R package
+# See also: https://docs.ropensci.org/cffr/
+# --------------------------------------------
+ 
+cff-version: 1.2.0
+message: 'To cite package "contdid" in publications use:'
+type: software
+license: GPL-3.0-only
+title: 'contdid: Difference-in-Differences with a Continuous Treatment'
+version: 0.1.0
+identifiers:
+- type: url
+  value: https://github.com/bcallaway11/contdid
+abstract: Difference-in-differences with a continuous treatment and staggered treatment
+  adoption.
+authors:
+- family-names: Callaway
+  given-names: Brantly
+  email: brantly.callaway@uga.edu
+- family-names: Goodman-Bacon
+  given-names: Andrew
+  email: andrew@goodman-bacon.com
+- family-names: Sant'Anna
+  given-names: Pedro H. C.
+  email: pedro.h.santanna@emory.edu
+preferred-citation:
+  type: manual
+  title: Difference-in-Differences with a Continuous Treatment
+  authors:
+  - family-names: Callaway
+    given-names: Brantly
+    email: brantly.callaway@uga.edu
+  - family-names: Goodman-Bacon
+    given-names: Andrew
+    email: andrew@goodman-bacon.com
+  - family-names: Sant'Anna
+    given-names: Pedro H. C.
+    email: pedro.h.santanna@emory.edu
+  year: '2025'
+  notes: R package version 0.1.0
+  url: https://bcallaway11.github.io/contdid/
+  identifiers:
+  - type: url
+    value: https://github.com/bcallaway11/contdid
+repository-code: https://github.com/bcallaway11/contdid
+url: https://bcallaway11.github.io/contdid/
+contact:
+- family-names: Callaway
+  given-names: Brantly
+  email: brantly.callaway@uga.edu
+references:
+- type: software
+  title: 'R: A Language and Environment for Statistical Computing'
+  notes: Depends
+  url: https://www.R-project.org/
+  authors:
+  - name: R Core Team
+  institution:
+    name: R Foundation for Statistical Computing
+    address: Vienna, Austria
+  year: '2025'
+  version: '>= 4.1.0'
+- type: software
+  title: MASS
+  abstract: 'MASS: Support Functions and Datasets for Venables and Ripley''s MASS'
+  notes: Imports
+  url: http://www.stats.ox.ac.uk/pub/MASS4/
+  repository: https://CRAN.R-project.org/package=MASS
+  authors:
+  - family-names: Ripley
+    given-names: Brian
+    email: Brian.Ripley@R-project.org
+  - family-names: Venables
+    given-names: Bill
+  year: '2025'
+  doi: 10.32614/CRAN.package.MASS
+
