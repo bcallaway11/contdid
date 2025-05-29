@@ -54,6 +54,35 @@ jobs:
           # Write the updated citation file
           writeLines(citation_text, "inst/CITATION")'
 
+      - name: Update inst/CITATION
+        run: |
+          Rscript -e '
+            library(desc)
+
+            d <- desc::desc(file = "DESCRIPTION")
+            title <- d$get("Title")
+            authors <- d$get("Authors@R")[[1]]
+            version <- d$get("Version")
+            urls <- strsplit(d$get("URL"), ",")[[1]]
+            url <- trimws(urls[1])  # Use only the first URL
+            year <- format(Sys.Date(), "%Y")
+
+            lines <- c(
+              "citHeader(\"To cite this package, use:\")",
+              "",
+              "bibentry(",
+              "  bibtype = \"Manual\",",
+              sprintf("  title = \"%s\",", title),
+              "  author = ",
+              paste0("    ", deparse(authors), collapse = "\n"),
+              sprintf("  year = \"%s\",", year),
+              sprintf("  note = \"R package version %s\",", version),
+              sprintf("  url = \"%s\"", url),
+              ")"
+            )
+
+            writeLines(lines, con = "inst/CITATION")
+          '
 
       - name: Update CITATION.cff
         run: |
