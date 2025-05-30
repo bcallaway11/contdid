@@ -112,11 +112,10 @@ supplied, then the default behavior is to set
 \code{dvals} to be the 1st to 99th percentiles of the dose among
 units that experience any positive dose.}
 
-\item{degree}{The degree of the B-Spline used in estimation.  The default is 1, which in
+\item{degree}{The degree of the B-Spline used in estimation.  The default is 3, which in
 combination with the default choice for the \code{num-knots}, leads to fitting models for
-the group of treated units that only includes the a linear term in the dose.  For
-nonparametric or flexible parametric estimation, a good option is to set
-\code{degree=3}.}
+the group of treated units that only that is a cubic polynomial in the dose.  Setting
+\code{degree=1} will lead to a linear model, while setting \code{degree=2} will lead to a quadratic model.}
 
 \item{num_knots}{The number of knots to include for the B-Spline.  The default is 0
 so that the spline is global (i.e., this will amount to fitting a global polynomial).

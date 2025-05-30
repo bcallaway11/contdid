@@ -48,11 +48,10 @@
 #'  If it is not specified, the default choice will be use the percentiles of the dose among
 #'  all ever-treated units.
 #'
-#' @param degree The degree of the B-Spline used in estimation.  The default is 1, which in
+#' @param degree The degree of the B-Spline used in estimation.  The default is 3, which in
 #'  combination with the default choice for the `num-knots`, leads to fitting models for
-#'  the group of treated units that only includes the a linear term in the dose.  For
-#'  nonparametric or flexible parametric estimation, a good option is to set
-#'  `degree=3`.
+#'  the group of treated units that only that is a cubic polynomial in the dose.  Setting
+#'  `degree=1` will lead to a linear model, while setting `degree=2` will lead to a quadratic model.
 #'
 #' @param num_knots The number of knots to include for the B-Spline.  The default is 0
 #'  so that the spline is global (i.e., this will amount to fitting a global polynomial).
@@ -72,7 +71,7 @@ cont_did <- function(yname,
                      treatment_type = c("continuous", "discrete"),
                      dose_est_method = c("parametric", "cck"),
                      dvals = NULL,
-                     degree = 1,
+                     degree = 3,
                      num_knots = 0,
                      allow_unbalanced_panel = FALSE,
                      control_group = c("notyettreated", "nevertreated", "eventuallytreated"),

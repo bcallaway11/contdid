@@ -14,11 +14,10 @@ treatment effect}
 If it is not specified, the default choice will be use the percentiles of the dose among
 all ever-treated units.}
 
-\item{degree}{The degree of the B-Spline used in estimation.  The default is 1, which in
+\item{degree}{The degree of the B-Spline used in estimation.  The default is 3, which in
 combination with the default choice for the \code{num-knots}, leads to fitting models for
-the group of treated units that only includes the a linear term in the dose.  For
-nonparametric or flexible parametric estimation, a good option is to set
-\code{degree=3}.}
+the group of treated units that only that is a cubic polynomial in the dose.  Setting
+\code{degree=1} will lead to a linear model, while setting \code{degree=2} will lead to a quadratic model.}
 
 \item{knots}{A vector of placements of knots for b-splines.  Since this function
 is typically called internally, this would typically be set by the calling

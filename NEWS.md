@@ -1,3 +1,7 @@
+# contdid 0.1.1
+
+* Change default parametric specification to cubic polynomial.
+
 # contdid 0.1.0
 
 * Initial CRAN submission.
