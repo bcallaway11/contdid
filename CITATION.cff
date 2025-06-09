@@ -10,7 +10,11 @@ license: GPL-3.0-only
 title: 'contdid: Difference-in-Differences with a Continuous Treatment'
 version: 0.1.1
 abstract: Difference-in-differences with a continuous treatment and staggered treatment
-  adoption.
+  adoption. The package supports estimation of treatment effects and causal responses
+  as a function of the dose, event studies indexed by length of exposure to the treatment,
+  and aggregations into overall average effects. It also includes uniform inference
+  procedures and both parametric and nonparametric models for treatment effects. The
+  methods are based on Callaway, Goodman-Bacon, and Sant'Anna (2025) <arXiv:2107.02637>.
 authors:
 - family-names: Callaway
   given-names: Brantly
