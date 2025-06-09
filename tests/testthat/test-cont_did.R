@@ -92,7 +92,7 @@ test_that("changing variable names is ok", {
   # Simulate data
   set.seed(1234)
   df <- simulate_contdid_data(
-    n = 500,
+    n = 1000,
     num_time_periods = 4,
     num_groups = 4,
     dose_linear_effect = 0,
@@ -112,7 +112,7 @@ test_that("changing variable names is ok", {
         aggregation = "dose",
         treatment_type = "continuous",
         control_group = "notyettreated",
-        biters = 10,
+        biters = 50,
         cband = TRUE,
         num_knots = 1,
         degree = 3,

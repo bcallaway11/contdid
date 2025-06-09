@@ -1,10 +1,10 @@
 Package: contdid
 Title: Difference-in-Differences with a Continuous Treatment
-Version: 0.1.1
+Version: 0.1.0
 Authors@R: c(person("Brantly", "Callaway", email = "brantly.callaway@uga.edu", role = c("aut", "cre")),
              person("Andrew", "Goodman-Bacon", email = "andrew@goodman-bacon.com", role = c("aut")),
              person("Pedro H. C.", "Sant'Anna", email="pedro.h.santanna@emory.edu", role = c("aut")))
-Description: Difference-in-differences with a continuous treatment and staggered treatment adoption. The package supports estimation of treatment effects and   causal responses as a function of the dose, event studies indexed by length of exposure to the treatment, and aggregations into overall average effects. It also includes uniform inference procedures and both parametric and nonparametric models for treatment effects. The methods are based on Callaway, Goodman-Bacon, and Sant'Anna (2025) <arXiv:2107.02637>.
+Description: Difference-in-differences with a continuous treatment and staggered treatment adoption. The package supports estimation of treatment effects and   causal responses as a function of the dose, event studies indexed by length of exposure to the treatment, and aggregations into overall average effects. It also includes uniform inference procedures and both parametric and nonparametric models for treatment effects. The methods are based on Callaway, Goodman-Bacon, and Sant'Anna (2025) <doi:10.48550/arXiv.2107.02637>.
 Depends:
     R (>= 4.1.0),
 License: GPL-3
