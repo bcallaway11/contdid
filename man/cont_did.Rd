@@ -223,7 +223,7 @@ B-splines under the hood.
 # build small simulated data
 set.seed(1234)
 df <- simulate_contdid_data(
- n = 5000,
+ n = 500,
  num_time_periods = 4,
  num_groups = 4,
  dose_linear_effect = 0,
@@ -242,7 +242,7 @@ cd_res <- cont_did(
  aggregation = "dose",
  treatment_type = "continuous",
  control_group = "notyettreated",
- biters = 100,
+ biters = 10,
  cband = TRUE,
  num_knots = 1,
  degree = 3,
