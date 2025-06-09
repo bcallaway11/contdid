@@ -213,8 +213,9 @@ ggcont_did(cd_res, type = "acrt")
 
 ### Case 2: Event Study Aggregations
 
-Next, we consider event study aggregations. The first is event study
-aggregation for `ATT`. The second is event study aggregation for `ACRT`.
+Next, we consider event study aggregations. The first is an event study
+aggregation for `ATT`. The second is an event study aggregation for
+`ACRT`.
 
 **Event study aggregation for `ATT`:**
 

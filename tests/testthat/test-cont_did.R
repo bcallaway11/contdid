@@ -84,3 +84,39 @@ test_that("test basic functionality", {
   expect_true(abs(out$overall_att$overall_att) < 0.2)
   expect_true(abs(out$event_study$Estimate[4]) < 0.2) # event study at e=1
 })
+
+
+test_that("changing variable names is ok", {
+  # this tests a previous bug where the dose had to be called "D"
+
+  # Simulate data
+  set.seed(1234)
+  df <- simulate_contdid_data(
+    n = 500,
+    num_time_periods = 4,
+    num_groups = 4,
+    dose_linear_effect = 0,
+    dose_quadratic_effect = 0
+  )
+  names(df) <- c("unit_id", "the_group", "the_dose", "which_time", "outcome")
+  expect_silent({ 
+    suppressWarnings(
+      cont_did(
+        yname = "outcome",
+        tname = "which_time",
+        idname = "unit_id",
+        dname = "the_dose",
+        data = df,
+        gname = "the_group",
+        target_parameter = "slope",
+        aggregation = "dose",
+        treatment_type = "continuous",
+        control_group = "notyettreated",
+        biters = 10,
+        cband = TRUE,
+        num_knots = 1,
+        degree = 3,
+      )
+    )
+  })
+})

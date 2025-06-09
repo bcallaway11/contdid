@@ -40,6 +40,9 @@ setup_pte_cont <- function(yname,
                            degree = 1,
                            num_knots = 0,
                            ...) {
+
+    data$D <- data[[dname]]
+
     # make the same call to ptetools::setup_pte as usual
     # we will add some things to this
     ptep <- ptetools::setup_pte(

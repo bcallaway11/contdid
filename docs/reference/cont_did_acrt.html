@@ -11,7 +11,7 @@ and time period."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">contdid</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -62,11 +62,10 @@ all ever-treated units.</p></dd>
 
 
 <dt id="arg-degree">degree<a class="anchor" aria-label="anchor" href="#arg-degree"></a></dt>
-<dd><p>The degree of the B-Spline used in estimation.  The default is 1, which in
+<dd><p>The degree of the B-Spline used in estimation.  The default is 3, which in
 combination with the default choice for the <code>num-knots</code>, leads to fitting models for
-the group of treated units that only includes the a linear term in the dose.  For
-nonparametric or flexible parametric estimation, a good option is to set
-<code>degree=3</code>.</p></dd>
+the group of treated units that only that is a cubic polynomial in the dose.  Setting
+<code>degree=1</code> will lead to a linear model, while setting <code>degree=2</code> will lead to a quadratic model.</p></dd>
 
 
 <dt id="arg-knots">knots<a class="anchor" aria-label="anchor" href="#arg-knots"></a></dt>

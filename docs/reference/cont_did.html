@@ -13,7 +13,7 @@ B-splines under the hood."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">contdid</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,7 +59,7 @@ B-splines under the hood.</p>
 <span>  treatment_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"continuous"</span>, <span class="st">"discrete"</span><span class="op">)</span>,</span>
 <span>  dose_est_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"parametric"</span>, <span class="st">"cck"</span><span class="op">)</span>,</span>
 <span>  dvals <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  degree <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  degree <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  num_knots <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  allow_unbalanced_panel <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  control_group <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"notyettreated"</span>, <span class="st">"nevertreated"</span>, <span class="st">"eventuallytreated"</span><span class="op">)</span>,</span>
@@ -158,11 +158,10 @@ all ever-treated units.</p></dd>
 
 
 <dt id="arg-degree">degree<a class="anchor" aria-label="anchor" href="#arg-degree"></a></dt>
-<dd><p>The degree of the B-Spline used in estimation.  The default is 1, which in
+<dd><p>The degree of the B-Spline used in estimation.  The default is 3, which in
 combination with the default choice for the <code>num-knots</code>, leads to fitting models for
-the group of treated units that only includes the a linear term in the dose.  For
-nonparametric or flexible parametric estimation, a good option is to set
-<code>degree=3</code>.</p></dd>
+the group of treated units that only that is a cubic polynomial in the dose.  Setting
+<code>degree=1</code> will lead to a linear model, while setting <code>degree=2</code> will lead to a quadratic model.</p></dd>
 
 
 <dt id="arg-num-knots">num_knots<a class="anchor" aria-label="anchor" href="#arg-num-knots"></a></dt>
@@ -315,6 +314,52 @@ aggregating treatment effects (particularly useful are <code>min_e</code>,
     <p>cont_did_obj</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># build small simulated data</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1234</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="simulate_contdid_data.html">simulate_contdid_data</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span> n <span class="op">=</span> <span class="fl">5000</span>,</span></span>
+<span class="r-in"><span> num_time_periods <span class="op">=</span> <span class="fl">4</span>,</span></span>
+<span class="r-in"><span> num_groups <span class="op">=</span> <span class="fl">4</span>,</span></span>
+<span class="r-in"><span> dose_linear_effect <span class="op">=</span> <span class="fl">0</span>,</span></span>
+<span class="r-in"><span> dose_quadratic_effect <span class="op">=</span> <span class="fl">0</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># estimate effects of continuous treatment</span></span></span>
+<span class="r-in"><span><span class="va">cd_res</span> <span class="op">&lt;-</span> <span class="fu">cont_did</span><span class="op">(</span></span></span>
+<span class="r-in"><span> yname <span class="op">=</span> <span class="st">"Y"</span>,</span></span>
+<span class="r-in"><span> tname <span class="op">=</span> <span class="st">"time_period"</span>,</span></span>
+<span class="r-in"><span> idname <span class="op">=</span> <span class="st">"id"</span>,</span></span>
+<span class="r-in"><span> dname <span class="op">=</span> <span class="st">"D"</span>,</span></span>
+<span class="r-in"><span> data <span class="op">=</span> <span class="va">df</span>,</span></span>
+<span class="r-in"><span> gname <span class="op">=</span> <span class="st">"G"</span>,</span></span>
+<span class="r-in"><span> target_parameter <span class="op">=</span> <span class="st">"slope"</span>,</span></span>
+<span class="r-in"><span> aggregation <span class="op">=</span> <span class="st">"dose"</span>,</span></span>
+<span class="r-in"><span> treatment_type <span class="op">=</span> <span class="st">"continuous"</span>,</span></span>
+<span class="r-in"><span> control_group <span class="op">=</span> <span class="st">"notyettreated"</span>,</span></span>
+<span class="r-in"><span> biters <span class="op">=</span> <span class="fl">100</span>,</span></span>
+<span class="r-in"><span> cband <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span> num_knots <span class="op">=</span> <span class="fl">1</span>,</span></span>
+<span class="r-in"><span> degree <span class="op">=</span> <span class="fl">3</span>,</span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">cd_res</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Overall ATT:  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      ATT    Std. Error     [ 95%  Conf. Int.] </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  -0.0265        0.0301    -0.0855      0.0325 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Overall ACRT:  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    ACRT    Std. Error     [ 95%  Conf. Int.]  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  0.1341        0.0485      0.039      0.2293 *</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ---</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Signif. codes: `*' confidence band does not cover 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-in"><span></span></span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 
