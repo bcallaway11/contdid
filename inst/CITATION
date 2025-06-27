@@ -6,6 +6,6 @@ bibentry(
   author = 
     c(person("Brantly", "Callaway", email = "brantly.callaway@uga.edu", role = c("aut", "cre")), person("Andrew", "Goodman-Bacon", email = "andrew@goodman-bacon.com", role = c("aut")), person("Pedro H. C.", "Sant'Anna", email="pedro.h.santanna@emory.edu", role = c("aut"))),
   year = "2025",
-  note = "R package version 0.1.1",
+  note = "R package version 0.1.0",
   url = "https://bcallaway11.github.io/contdid/"
 )
