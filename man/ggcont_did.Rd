@@ -41,7 +41,7 @@ cd_res <- cont_did(
     aggregation = "dose",
     treatment_type = "continuous",
     control_group = "notyettreated",
-    biters = 50,
+    biters = 10,
     cband = TRUE,
     num_knots = 1,
     degree = 3,
