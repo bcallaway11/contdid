@@ -31,4 +31,5 @@ title or similar.
 **CRAN comment:** \dontrun{} should only be used if the example really cannot be executed
 (e.g. because of missing additional software, missing API keys, ...)
 
-**Response:** Removed \dontrun{} from example for `ggcont_did`, which was the only instance of its use in the package.
+**Response:** Repaced \dontrun{} with \donttest for example for `ggcont_did`, which was the
+only instance of its use in the package, as this example takes more than 5 seconds to run.

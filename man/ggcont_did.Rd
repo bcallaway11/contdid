@@ -19,6 +19,7 @@ A ggplot object
 a function to plot results with a continuous treatment
 }
 \examples{
+\donttest{
 # build small simulated data
 set.seed(1234)
 df <- simulate_contdid_data(
@@ -41,7 +42,7 @@ cd_res <- cont_did(
     aggregation = "dose",
     treatment_type = "continuous",
     control_group = "notyettreated",
-    biters = 10,
+    biters = 50,
     cband = TRUE,
     num_knots = 1,
     degree = 3,
@@ -52,5 +53,6 @@ ggcont_did(cd_res, type = "att")
 
 # plot ACRT as a function of the dose
 ggcont_did(cd_res, type = "acrt")
+}
 
 }
