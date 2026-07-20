@@ -1,1 +1,18 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.Rcheck/
+*.tar.gz
+*.tgz
+inst/doc
 
+# development scratch folder (not part of the package)
+dev/
+
+# revdeplite: keep the runner script, ignore generated output
+.revdeplite/*.rds
+.revdeplite/*.tar.gz
+.revdeplite/*.md
+.revdeplite/github/
+.revdeplite/results/

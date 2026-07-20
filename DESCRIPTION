@@ -1,6 +1,6 @@
 Package: contdid
 Title: Difference-in-Differences with a Continuous Treatment
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: c(person("Brantly", "Callaway", email = "brantly.callaway@uga.edu", role = c("aut", "cre")),
              person("Andrew", "Goodman-Bacon", email = "andrew@goodman-bacon.com", role = c("aut")),
              person("Pedro H. C.", "Sant'Anna", email="pedro.h.santanna@emory.edu", role = c("aut")))
@@ -9,10 +9,9 @@ Depends:
     R (>= 4.1.0),
 License: GPL-3
 Encoding: UTF-8
-LazyData: true
 Imports:
     BMisc (>= 1.4.8),
-    ptetools,
+    ptetools (>= 1.0.1),
     checkmate,
     splines2,
     sandwich,
@@ -20,7 +19,6 @@ Imports:
     MASS,
     npiv
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
 URL:
     https://bcallaway11.github.io/contdid/,
     https://github.com/bcallaway11/contdid
@@ -29,3 +27,4 @@ Suggests:
     testthat (>= 3.0.0),
     tidyr
 Config/testthat/edition: 3
+Config/roxygen2/version: 8.0.0

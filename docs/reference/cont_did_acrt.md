@@ -1,0 +1,45 @@
+# Compute ACRT's for a Timing Group and Time Period
+
+This is the main function for computing dose-specific effects of a
+continuous treatment, given a particular timing group and time period.
+
+## Usage
+
+``` r
+cont_did_acrt(gt_data, dvals = NULL, degree = 1, knots = numeric(0), ...)
+```
+
+## Arguments
+
+- gt_data:
+
+  data that is "local" to a particular group-time average treatment
+  effect
+
+- dvals:
+
+  The values of the treatment at which to compute dose-specific effects.
+  If it is not specified, the default choice will be use the percentiles
+  of the dose among all ever-treated units.
+
+- degree:
+
+  The degree of the B-Spline used in estimation. The default is 3, which
+  in combination with the default choice for the `num-knots`, leads to
+  fitting models for the group of treated units that only that is a
+  cubic polynomial in the dose. Setting `degree=1` will lead to a linear
+  model, while setting `degree=2` will lead to a quadratic model.
+
+- knots:
+
+  A vector of placements of knots for b-splines. Since this function is
+  typically called internally, this would typically be set by the
+  calling function.
+
+- ...:
+
+  additional arguments
+
+## Value
+
+ptetools::attgt_if object

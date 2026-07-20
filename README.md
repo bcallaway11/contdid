@@ -203,13 +203,13 @@ summary(cd_res)
 ggcont_did(cd_res, type = "att")
 ```
 
-<img src="man/figures/README-unnamed-chunk-5-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-5-1.png" alt="" width="100%" />
 
 ``` r
 ggcont_did(cd_res, type = "acrt")
 ```
 
-<img src="man/figures/README-unnamed-chunk-5-2.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-5-2.png" alt="" width="100%" />
 
 ### Case 2: Event Study Aggregations
 
@@ -248,18 +248,18 @@ summary(cd_res_es_level)
 #> 
 #> 
 #> Dynamic Effects:
-#>  Event Time Estimate Std. Error   [95%  Conf. Band] 
-#>          -2  -0.0222     0.0504 -0.1488      0.1044 
-#>          -1   0.0116     0.0271 -0.0565      0.0798 
-#>           0  -0.0039     0.0299 -0.0790      0.0713 
-#>           1  -0.0160     0.0397 -0.1157      0.0837 
-#>           2  -0.0839     0.0419 -0.1891      0.0212 
+#>  Event Time Estimate Std. Error [95% Simult.  Conf. Band] 
+#>          -2  -0.0222     0.0504       -0.1488      0.1044 
+#>          -1   0.0116     0.0271       -0.0565      0.0798 
+#>           0  -0.0039     0.0299       -0.0790      0.0713 
+#>           1  -0.0160     0.0397       -0.1157      0.0837 
+#>           2  -0.0839     0.0419       -0.1891      0.0212 
 #> ---
 #> Signif. codes: `*' confidence band does not cover 0
 ggcont_did(cd_res_es_level)
 ```
 
-<img src="man/figures/README-unnamed-chunk-6-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-6-1.png" alt="" width="100%" />
 
 **Event study aggregation for `ACRT`:**
 
@@ -292,18 +292,18 @@ summary(cd_res_es_slope)
 #> 
 #> 
 #> Dynamic Effects:
-#>  Event Time Estimate Std. Error   [95%  Conf. Band]  
-#>          -2  -0.0701     0.0808 -0.2710      0.1308  
-#>          -1  -0.2212     0.0892 -0.4431      0.0007  
-#>           0   0.1592     0.0586  0.0136      0.3048 *
-#>           1   0.0551     0.0828 -0.1509      0.2610  
-#>           2  -0.5405     0.1154 -0.8275     -0.2535 *
+#>  Event Time Estimate Std. Error [95% Simult.  Conf. Band]  
+#>          -2  -0.0701     0.0808       -0.2710      0.1308  
+#>          -1  -0.2212     0.0892       -0.4431      0.0007  
+#>           0   0.1592     0.0586        0.0136      0.3048 *
+#>           1   0.0551     0.0828       -0.1509      0.2610  
+#>           2  -0.5405     0.1154       -0.8275     -0.2535 *
 #> ---
 #> Signif. codes: `*' confidence band does not cover 0
 ggcont_did(cd_res_es_slope)
 ```
 
-<img src="man/figures/README-unnamed-chunk-7-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-7-1.png" alt="" width="100%" />
 
 ### Case 3: Data-Driven Nonparametric Model for Treatment Effects
 

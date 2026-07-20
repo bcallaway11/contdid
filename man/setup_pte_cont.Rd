@@ -40,7 +40,7 @@ setup_pte_cont(
 
 \item{idname}{Name of id in \code{data}}
 
-\item{data}{balanced panel data}
+\item{data}{balanced panel or repeated cross sections data}
 
 \item{xformula}{A formula for additional covariates.  This is not currently supported.}
 

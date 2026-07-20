@@ -100,12 +100,12 @@ There is a bias-variance tradeoff for including more or less knots.}
 
 \item{allow_unbalanced_panel}{Whether or not function should
 "balance" the panel with respect to time and id.  The default
-values if \code{FALSE} which means that \code{\link[did:att_gt]{att_gt()}} will drop
+value is \code{FALSE} which means that \code{\link[did:att_gt]{att_gt()}} will drop
 all units where data is not observed in all periods.
 The advantage of this is that the computations are faster
 (sometimes substantially).}
 
-\item{control_group}{Which units to use the control group.
+\item{control_group}{Which units to use as the control group.
 The default is "nevertreated" which sets the control group
 to be the group of units that never participate in the
 treatment.  This group does not change across groups or
@@ -122,16 +122,32 @@ in the treatment where units can anticipate participating in the
 treatment and therefore it can affect their untreated potential outcomes}
 
 \item{weightsname}{The name of the column containing the sampling weights.
-If not set, all observations have same weight.}
+If not set, all observations have same weight. When weights are
+time-invariant (constant within each unit across periods), all
+\code{fix_weights} options produce identical results and no special
+handling is needed.
+
+When weights vary across time (e.g., time-varying population sizes),
+the default behavior differs by panel type:
+\describe{
+\item{Balanced panel}{Each 2x2 DiD comparison uses the weight from the
+earlier of the two time periods involved. For post-treatment cells,
+this is the base period (g-1). For pre-treatment cells with
+\code{base_period="varying"}, this is the pre-treatment period itself.
+The panel DRDID estimators are used.}
+\item{Repeated cross sections and unbalanced panels}{Both periods'
+per-observation weights are passed directly to the RC DRDID estimators,
+so each observation carries its own period-specific weight.}
+}
+Use the \code{fix_weights} argument to override the default behavior.}
 
 \item{alp}{the significance level, default is 0.05}
 
 \item{bstrap}{Boolean for whether or not to compute standard errors using
-the multiplier bootstrap.  If standard errors are clustered, then one
-must set \code{bstrap=TRUE}. Default is \code{TRUE} (in addition, cband
+the multiplier bootstrap.  Default is \code{TRUE} (in addition, cband
 is also by default \code{TRUE} indicating that uniform confidence bands
-will be returned.  If bstrap is \code{FALSE}, then analytical
-standard errors are reported.}
+will be returned).  If \code{bstrap=FALSE}, analytical standard errors are
+reported; these are cluster-robust when \code{clustervars} is supplied.}
 
 \item{cband}{Boolean for whether or not to compute a uniform confidence
 band that covers all of the group-time average treatment effects
@@ -152,26 +168,41 @@ and this is only applicable if \code{bstrap=TRUE}.}
 \item{clustervars}{A vector of variables names to cluster on.  At most, there
 can be two variables (otherwise will throw an error) and one of these
 must be the same as idname which allows for clustering at the individual
-level. By default, we cluster at individual level (when \code{bstrap=TRUE}).}
+level. Clustered standard errors are available with the multiplier bootstrap
+(\code{bstrap=TRUE}) or analytically (\code{bstrap=FALSE}).}
 
 \item{est_method}{the method to compute group-time average treatment effects.  The default is "dr" which uses the doubly robust
 approach in the \code{DRDID} package.  Other built-in methods
 include "ipw" for inverse probability weighting and "reg" for
 first step regression estimators.  The user can also pass their
 own function for estimating group time average treatment
-effects.  This should be a function
-\code{f(Y1,Y0,treat,covariates)} where \code{Y1} is an
-\code{n} x \code{1} vector of outcomes in the post-treatment
-outcomes, \code{Y0} is an \code{n} x \code{1} vector of
-pre-treatment outcomes, \code{treat} is a vector indicating
-whether or not an individual participates in the treatment,
-and \code{covariates} is an \code{n} x \code{k} matrix of
-covariates.  The function should return a list that includes
-\code{ATT} (an estimated average treatment effect), and
-\code{inf.func} (an \code{n} x \code{1} influence function).
+effects.  The required signature depends on the data structure:
+
+\strong{Panel data} (\code{panel=TRUE}): \code{f(y1, y0, D, covariates, i.weights, inffunc, ...)} where \code{y1} is an \verb{n x 1} vector of
+post-treatment outcomes, \code{y0} is an \verb{n x 1} vector of
+pre-treatment outcomes, \code{D} is a binary vector indicating
+treatment group membership, \code{covariates} is an \verb{n x k} matrix,
+\code{i.weights} is a vector of sampling weights, and \code{inffunc} is a
+logical requesting influence-function computation.
+
+\strong{Repeated cross sections / unbalanced panel} (\code{panel=FALSE}):
+\code{f(y, post, D, covariates, i.weights, inffunc, ...)} where \code{y} is
+the outcome vector (length \code{n}), \code{post} is a binary indicator for
+the post-treatment period, \code{D} is a binary treatment indicator,
+\code{covariates} is an \verb{n x k} matrix, \code{i.weights} is a vector of
+sampling weights, and \code{inffunc} is a logical.
+
+In both cases the function should return a list that includes
+\code{ATT} (the estimated group-time average treatment effect) and
+\code{att.inf.func} (an \verb{n x 1} influence function — one entry per
+observation passed into the estimator).
 The function can return other things as well, but these are
-the only two that are required. \code{est_method} is only used
-if covariates are included.}
+the only two that are required. With no covariates
+(\code{xformla = NULL}), the built-in methods ("dr", "ipw", "reg") all
+reduce to the unconditional difference-in-differences estimator, so
+the choice among them is irrelevant; a custom \code{est_method} function
+is still called (with an intercept-only \code{covariates} matrix) and
+determines the estimates.}
 
 \item{base_period}{Whether to use a "varying" base period or a
 "universal" base period.  Either choice results in the same
@@ -203,11 +234,9 @@ Default is \code{FALSE}.}
 
 \item{cl}{number of clusters to be used when bootstrapping; default is 1}
 
-\item{...}{extra arguments that can be passed to create the correct subsets
-of the data (depending on \code{subset_fun}), to estimate group time
-average treatment effects (depending on \code{attgt_fun}), or to
-aggregating treatment effects (particularly useful are \code{min_e},
-\code{max_e}, and \code{balance_e} arguments to event study aggregations)}
+\item{...}{Additional arguments to be passed to a custom \code{est_method}
+function. These are ignored when using built-in estimation methods
+(\code{"dr"}, \code{"ipw"}, \code{"reg"}).}
 }
 \value{
 cont_did_obj

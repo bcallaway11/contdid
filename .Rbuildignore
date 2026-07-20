@@ -8,4 +8,6 @@
 ^README_cache$
 ^CRAN-SUBMISSION$
 ^CITATION\.cff$
+^dev$
+^\.revdeplite$
 

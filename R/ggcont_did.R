@@ -50,7 +50,7 @@ ggcont_did <- function(dose_obj, type = "att") {
     # just call native plotting from `ptetools` package, no adjustments needed
     if (inherits(dose_obj, "pte_results")) {
         # in this case plot the event study
-        p <- ggpte(dose_obj)
+        p <- ggplot2::autoplot(dose_obj)
         # change label if we are estimating a slope
         if (dose_obj$ptep$target_parameter == "slope") {
             p <- p + ggplot2::ylab("acrt")
@@ -58,6 +58,6 @@ ggcont_did <- function(dose_obj, type = "att") {
         p
     } else {
         # in this case, plot effects across doses
-        ggpte_cont(dose_obj, type)
+        ggplot2::autoplot(dose_obj, type = type)
     }
 }
