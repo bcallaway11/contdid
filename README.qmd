@@ -1,5 +1,5 @@
 ---
-output: github_document
+format: gfm
 references:
   - id: callaway-goodman-santanna-2025
     title: "Difference-in-Differences with a Continuous Treatment"
@@ -33,9 +33,7 @@ references:
 
 ---
 
-<!-- README.md is generated from README.Rmd. Please edit that file -->
-
-
+<!-- README.md is generated from README.qmd. Please edit that file -->
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(

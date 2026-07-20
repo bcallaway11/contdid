@@ -1,9 +1,11 @@
 
-<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+<!-- README.md is generated from README.qmd. Please edit that file -->
 
 # contdid
 
 <!-- badges: start -->
+
 <!-- badges: end -->
 
 An R package for difference-in-differences with a continuous treatment.
@@ -203,13 +205,15 @@ summary(cd_res)
 ggcont_did(cd_res, type = "att")
 ```
 
-<img src="man/figures/README-unnamed-chunk-5-1.png" alt="" width="100%" />
+<img src="man/figures/README-unnamed-chunk-5-1.png"
+style="width:100.0%" />
 
 ``` r
 ggcont_did(cd_res, type = "acrt")
 ```
 
-<img src="man/figures/README-unnamed-chunk-5-2.png" alt="" width="100%" />
+<img src="man/figures/README-unnamed-chunk-5-2.png"
+style="width:100.0%" />
 
 ### Case 2: Event Study Aggregations
 
@@ -259,7 +263,8 @@ summary(cd_res_es_level)
 ggcont_did(cd_res_es_level)
 ```
 
-<img src="man/figures/README-unnamed-chunk-6-1.png" alt="" width="100%" />
+<img src="man/figures/README-unnamed-chunk-6-1.png"
+style="width:100.0%" />
 
 **Event study aggregation for `ACRT`:**
 
@@ -303,21 +308,22 @@ summary(cd_res_es_slope)
 ggcont_did(cd_res_es_slope)
 ```
 
-<img src="man/figures/README-unnamed-chunk-7-1.png" alt="" width="100%" />
+<img src="man/figures/README-unnamed-chunk-7-1.png"
+style="width:100.0%" />
 
 ### Case 3: Data-Driven Nonparametric Model for Treatment Effects
 
 In most applications, it is hard to know the correct functional form for
-the treatment effects as a function of the dose. In Callaway,
-Goodman-Bacon, and Sant’Anna (2025), the approach we emphasize comes
-from Chen, Christensen, and Kankanala (2025), and the `contdid` package
-uses their [`npiv` package](https://github.com/JeffreyRacine/npiv) to
-implement this approach. Code-wise, the only thing to change is to set
-the argument `dose_est_method="cck"`. \[Note that we currently only
-support this option for the case with two periods and no staggered
-adoption. With more periods, you can average the pre- and post-treatment
-periods to reduce it to a two period case and then run the code below;
-in fact, this is what we did in the application in our paper.\]
+the treatment effects as a function of the dose. In Callaway et al.
+(2025), the approach we emphasize comes from Chen et al. (2025), and the
+`contdid` package uses their [`npiv`
+package](https://github.com/JeffreyRacine/npiv) to implement this
+approach. Code-wise, the only thing to change is to set the argument
+`dose_est_method="cck"`. \[Note that we currently only support this
+option for the case with two periods and no staggered adoption. With
+more periods, you can average the pre- and post-treatment periods to
+reduce it to a two period case and then run the code below; in fact,
+this is what we did in the application in our paper.\]
 
 ``` r
 # simulate data with only two periods
@@ -379,7 +385,8 @@ ggcont_did(cd_res_cck) +
   labs(color = "")
 ```
 
-<img src="man/figures/README-unnamed-chunk-8-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-8-1.png"
+style="width:100.0%" />
 
 ## References
 
@@ -388,7 +395,7 @@ ggcont_did(cd_res_cck) +
 <div id="ref-callaway-goodman-santanna-2025" class="csl-entry">
 
 Callaway, Brantly, Andrew Goodman-Bacon, and Pedro H. C. Sant’Anna.
-2025. “Difference-in-Differences with a Continuous Treatment.”
+2025. *Difference-in-Differences with a Continuous Treatment*.
 
 </div>
 

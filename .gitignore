@@ -6,6 +6,8 @@
 *.tar.gz
 *.tgz
 inst/doc
+README_cache/
+.quarto/
 
 # development scratch folder (not part of the package)
 dev/
