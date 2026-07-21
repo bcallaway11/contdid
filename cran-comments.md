@@ -17,10 +17,15 @@ No other functional changes are included.
 
 ## Test environments
 
-- Local Ubuntu 24.04.4 LTS, R 4.6.1: all checks passed without issues.
-- GitHub Actions (R-CMD-check.yml): Windows (release, devel), macOS
-  (release), Ubuntu (release, devel) — to be run via `workflow_dispatch`
-  before submission; results to be added here.
+- Local Ubuntu 24.04.4 LTS, R 4.6.1:
+    - All checks passed without issues.
+- GitHub Actions
+    - Windows-latest (R release)
+    - Windows-latest (R devel)
+    - macOS-latest (R release)
+    - Ubuntu-latest (R release)
+    - Ubuntu-latest (R devel)
+    - All checks passed without issues.
 
 ## R CMD check results
 
