@@ -29,6 +29,10 @@ No other functional changes are included.
 
 ## R CMD check results
 
-0 errors | 0 warnings | 1 note
+0 errors | 0 warnings | 2 notes
 
 * Package was archived on CRAN (see explanation above).
+
+* Possibly misspelled words in DESCRIPTION: "Callaway", "Sant'Anna".
+  These are correctly spelled author surnames cited in the package
+  description (Callaway, Goodman-Bacon, and Sant'Anna, 2025).
