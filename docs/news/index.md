@@ -3,7 +3,7 @@
 ## contdid 0.1.2
 
 - Bug fix:
-  [`cont_did()`](https://github.com/bcallaway11/contdid/reference/cont_did.md)
+  [`cont_did()`](https://bcallaway11.github.io/contdid/reference/cont_did.md)
   with `target_parameter = "level"` and `aggregation = "eventstudy"`
   passed the continuous dose, rather than a treated/comparison
   indicator, to the underlying DiD estimator. This made the estimator
@@ -23,7 +23,7 @@ CRAN release: 2026-07-21
   `ptetools` has since been restored to CRAN as version 1.0.1).
 - Require `ptetools (>= 1.0.1)` in `Imports` to prevent recurrence.
 - Update
-  [`ggcont_did()`](https://github.com/bcallaway11/contdid/reference/ggcont_did.md)
+  [`ggcont_did()`](https://bcallaway11.github.io/contdid/reference/ggcont_did.md)
   to use `ptetools`’s `autoplot()` methods in place of the
   now-deprecated `ggpte()`/`ggpte_cont()`.
 
