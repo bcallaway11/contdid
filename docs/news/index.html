@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">contdid</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -31,20 +31,30 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.1.2" id="contdid-012">contdid 0.1.2<a class="anchor" aria-label="anchor" href="#contdid-012"></a></h2>
+<ul><li>Bug fix: <code><a href="../reference/cont_did.html">cont_did()</a></code> with <code>target_parameter = "level"</code> and <code>aggregation = "eventstudy"</code> passed the continuous dose, rather than a treated/comparison indicator, to the underlying DiD estimator. This made the estimator weight treated units by their dose and put weight on some treated units in the comparison group, so event-study <code>ATT</code> estimates from earlier versions were biased when treatment effects are nonzero. With DRDID &gt;= 1.4.0, which now requires a binary treatment indicator, this case failed with an error instead. Other combinations of <code>target_parameter</code> and <code>aggregation</code> were not affected.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.1.1" id="contdid-011">contdid 0.1.1<a class="anchor" aria-label="anchor" href="#contdid-011"></a></h2><p class="text-muted">CRAN release: 2026-07-21</p>
+<ul><li>Resubmission to CRAN following archival on 2026-07-16 (contdid was archived because its dependency <code>ptetools</code> had been archived; <code>ptetools</code> has since been restored to CRAN as version 1.0.1).</li>
+<li>Require <code>ptetools (&gt;= 1.0.1)</code> in <code>Imports</code> to prevent recurrence.</li>
+<li>Update <code><a href="../reference/ggcont_did.html">ggcont_did()</a></code> to use <code>ptetools</code>’s <code>autoplot()</code> methods in place of the now-deprecated <code>ggpte()</code>/<code>ggpte_cont()</code>.</li>
+</ul></div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.0" id="contdid-010">contdid 0.1.0<a class="anchor" aria-label="anchor" href="#contdid-010"></a></h2><p class="text-muted">CRAN release: 2025-07-03</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="sc">*</span> Initial CRAN submission.</span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="sc">*</span> CCK estimation is working <span class="cf">for</span> case with two periods.</span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="sc">*</span> Change default parametric specification to cubic polynomial.</span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="sc">*</span> Bug fix <span class="cf">for</span> variable names.</span></code></pre></div>
-</div>
+<ul><li>Initial CRAN submission.</li>
+<li>CCK estimation is working for case with two periods.</li>
+<li>Change default parametric specification to cubic polynomial.</li>
+<li>Bug fix for variable names.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.002" id="contdid-00002">contdid 0.0.002<a class="anchor" aria-label="anchor" href="#contdid-00002"></a></h2>
-<div class="sourceCode" id="cb2"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="sc">*</span> Added sanity checks <span class="cf">for</span> unexpected input data.</span></code></pre></div>
-</div>
+<ul><li>Added sanity checks for unexpected input data.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.001" id="contdid-00001">contdid 0.0.001<a class="anchor" aria-label="anchor" href="#contdid-00001"></a></h2>
-<div class="sourceCode" id="cb3"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="sc">*</span> Initial version.</span></code></pre></div>
-</div>
+<ul><li>Initial version.</li>
+</ul></div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

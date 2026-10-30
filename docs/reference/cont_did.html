@@ -13,7 +13,7 @@ B-splines under the hood."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">contdid</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -248,7 +248,9 @@ The multiplier bootstrap is generally much faster, but <code>attgt_fun</code> ne
 to provide an expression for the influence function (which could be challenging
 to figure out).  If no influence function is provided, then the <code>pte</code>
 package will use the empirical bootstrap no matter what the value of this
-parameter.</p></dd>
+parameter.  <code>bstrap = FALSE</code> (purely analytical standard errors) takes
+priority over <code>boot_type</code>: it is only available when <code>attgt_fun</code>
+returns an influence function, and it overrides <code>boot_type = "empirical"</code>.</p></dd>
 
 
 <dt id="arg-biters">biters<a class="anchor" aria-label="anchor" href="#arg-biters"></a></dt>

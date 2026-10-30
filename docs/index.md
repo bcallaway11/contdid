@@ -238,16 +238,16 @@ summary(cd_res_es_level)
 #> 
 #> Overall ATT:  
 #>      ATT    Std. Error     [ 95%  Conf. Int.] 
-#>  -0.0243        0.0289    -0.0808      0.0323 
+#>  -0.0265        0.0333    -0.0918      0.0389 
 #> 
 #> 
 #> Dynamic Effects:
 #>  Event Time Estimate Std. Error [95% Simult.  Conf. Band] 
-#>          -2  -0.0222     0.0504       -0.1488      0.1044 
-#>          -1   0.0116     0.0271       -0.0565      0.0798 
-#>           0  -0.0039     0.0299       -0.0790      0.0713 
-#>           1  -0.0160     0.0397       -0.1157      0.0837 
-#>           2  -0.0839     0.0419       -0.1891      0.0212 
+#>          -2  -0.0297     0.0512       -0.1555      0.0962 
+#>          -1   0.0210     0.0382       -0.0730      0.1149 
+#>           0  -0.0069     0.0372       -0.0984      0.0845 
+#>           1   0.0009     0.0436       -0.1063      0.1080 
+#>           2  -0.0512     0.0502       -0.1746      0.0722 
 #> ---
 #> Signif. codes: `*' confidence band does not cover 0
 ggcont_did(cd_res_es_level)
@@ -302,16 +302,16 @@ ggcont_did(cd_res_es_slope)
 ### Case 3: Data-Driven Nonparametric Model for Treatment Effects
 
 In most applications, it is hard to know the correct functional form for
-the treatment effects as a function of the dose. In Callaway,
-Goodman-Bacon, and Sant’Anna (2025), the approach we emphasize comes
-from Chen, Christensen, and Kankanala (2025), and the `contdid` package
-uses their [`npiv` package](https://github.com/JeffreyRacine/npiv) to
-implement this approach. Code-wise, the only thing to change is to set
-the argument `dose_est_method="cck"`. \[Note that we currently only
-support this option for the case with two periods and no staggered
-adoption. With more periods, you can average the pre- and post-treatment
-periods to reduce it to a two period case and then run the code below;
-in fact, this is what we did in the application in our paper.\]
+the treatment effects as a function of the dose. In Callaway et al.
+(2025), the approach we emphasize comes from Chen et al. (2025), and the
+`contdid` package uses their [`npiv`
+package](https://github.com/JeffreyRacine/npiv) to implement this
+approach. Code-wise, the only thing to change is to set the argument
+`dose_est_method="cck"`. \[Note that we currently only support this
+option for the case with two periods and no staggered adoption. With
+more periods, you can average the pre- and post-treatment periods to
+reduce it to a two period case and then run the code below; in fact,
+this is what we did in the application in our paper.\]
 
 ``` r
 # simulate data with only two periods
@@ -378,7 +378,7 @@ ggcont_did(cd_res_cck) +
 ## References
 
 Callaway, Brantly, Andrew Goodman-Bacon, and Pedro H. C. Sant’Anna.
-2025. “Difference-in-Differences with a Continuous Treatment.”
+2025. *Difference-in-Differences with a Continuous Treatment*.
 
 Chen, Xiaohong, Timothy Christensen, and Sid Kankanala. 2025. “Adaptive
 Estimation and Uniform Confidence Bands for Nonparametric Structural

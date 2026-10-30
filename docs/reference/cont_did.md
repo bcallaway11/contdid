@@ -221,7 +221,10 @@ cont_did(
   to provide an expression for the influence function (which could be
   challenging to figure out). If no influence function is provided, then
   the `pte` package will use the empirical bootstrap no matter what the
-  value of this parameter.
+  value of this parameter. `bstrap = FALSE` (purely analytical standard
+  errors) takes priority over `boot_type`: it is only available when
+  `attgt_fun` returns an influence function, and it overrides
+  `boot_type = "empirical"`.
 
 - biters:
 
