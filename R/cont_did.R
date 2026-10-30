@@ -1,3 +1,12 @@
+# =============================================================================
+# Title: Main estimation functions for contdid
+# Description: cont_did() and the (g,t)-level estimators and data subsetting
+#   it hands to ptetools for DiD with a continuous treatment
+# Author: Brant Callaway
+# Last update: 2026-10-29
+# Date created: 2024-09-11
+# =============================================================================
+
 #' @title Difference-in-differences with a Continuous Treatment
 #'
 #' @description A function for difference-in-differences with a continuous treatment in a
@@ -162,7 +171,7 @@ cont_did <- function(yname,
   }
 
   if (treatment_type == "continuous" && aggregation == "eventstudy" && target_parameter == "level") {
-    attgt_fun <- ptetools::did_attgt
+    attgt_fun <- cont_did_att_level
     gt_type <- "att"
   }
 
@@ -361,6 +370,26 @@ cont_did <- function(yname,
   )
 
   res
+}
+
+# --- ATT for a Timing Group and Time Period --------------------------------
+#
+# Internal attgt function used for the level event study. Wraps
+# ptetools::did_attgt, which passes `D` to DRDID::drdid_panel as the treatment
+# indicator. Within a (g,t) subset, cont_two_by_two_subset() sets D to the
+# dose for units in group g and 0 otherwise, so D > 0 identifies the treated
+# group. Passing the dose itself would make DRDID weight treated units by
+# their dose and put weight (1 - D) of treated units on the comparison side;
+# DRDID >= 1.4.0 rejects non-binary D outright.
+#
+# Arguments:
+#   gt_data - gt_data_frame for this (g,t), with D equal to the dose
+#   ...     - passed on to ptetools::did_attgt
+#
+# Returns: ptetools::attgt_if object for the binarized-treatment ATT(g,t)
+cont_did_att_level <- function(gt_data, ...) {
+  gt_data$D <- as.numeric(gt_data$D > 0)
+  ptetools::did_attgt(gt_data, ...)
 }
 
 #' @title Compute ACRT's for a Timing Group and Time Period

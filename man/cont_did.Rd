@@ -160,7 +160,9 @@ The multiplier bootstrap is generally much faster, but \code{attgt_fun} needs
 to provide an expression for the influence function (which could be challenging
 to figure out).  If no influence function is provided, then the \code{pte}
 package will use the empirical bootstrap no matter what the value of this
-parameter.}
+parameter.  \code{bstrap = FALSE} (purely analytical standard errors) takes
+priority over \code{boot_type}: it is only available when \code{attgt_fun}
+returns an influence function, and it overrides \code{boot_type = "empirical"}.}
 
 \item{biters}{The number of bootstrap iterations to use.  The default is 1000,
 and this is only applicable if \code{bstrap=TRUE}.}

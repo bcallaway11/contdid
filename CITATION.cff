@@ -8,7 +8,7 @@ message: 'To cite package "contdid" in publications use:'
 type: software
 license: GPL-3.0-only
 title: 'contdid: Difference-in-Differences with a Continuous Treatment'
-version: 0.1.1
+version: 0.1.2
 abstract: Provides methods for difference-in-differences with a continuous treatment
   and staggered treatment adoption. Includes estimation of treatment effects and causal
   responses as a function of the dose, event studies indexed by length of exposure
@@ -39,8 +39,8 @@ preferred-citation:
   - family-names: Sant'Anna
     given-names: Pedro H. C.
     email: pedro.h.santanna@emory.edu
-  year: '2025'
-  notes: R package version 0.1.1
+  year: '2026'
+  notes: R package version 0.1.2
   url: https://bcallaway11.github.io/contdid/
 repository-code: https://github.com/bcallaway11/contdid
 url: https://bcallaway11.github.io/contdid/
