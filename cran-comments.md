@@ -1,23 +1,24 @@
-## Resubmission after CRAN archival
+## Submission summary
 
-`contdid` was archived from CRAN on 2026-07-16 because its dependency
-`ptetools` had itself been archived ("requires archived package
-'ptetools'"). `ptetools` has since been fixed and republished on CRAN
-(version 1.0.1, 2026-07-20).
+This submission (0.1.2) fixes the ERRORs currently shown on the CRAN check
+results page for `contdid`. They were triggered by the release of `DRDID`
+1.4.0 (2026-10-22), which now requires the treatment indicator passed to
+`DRDID::drdid_panel()` to be binary.
 
-This submission (0.1.1):
-
-* Requires `ptetools (>= 1.0.1)` in `Imports`, to guard against this
-  recurring.
-* Updates `ggcont_did()` to call `ptetools`'s new `autoplot()` methods,
-  since the functions it previously called (`ggpte()`, `ggpte_cont()`)
-  are now deprecated in `ptetools` 1.0.1.
+* For the level event-study case of `cont_did()`, `contdid` was passing
+  the continuous dose (through `ptetools::did_attgt()`) where `DRDID`
+  expects a 0/1 treatment indicator. The dose is now converted to a
+  treated/comparison indicator before that call. This also fixes the
+  estimates in that case, which were incorrect with earlier versions of
+  `DRDID`.
+* Adds a unit test checking that the level event study recovers a known,
+  nonzero treatment effect.
 
 No other functional changes are included.
 
 ## Test environments
 
-- Local Ubuntu 24.04.4 LTS, R 4.6.1:
+- Local Ubuntu 24.04.5 LTS, R 4.6.1 (with `DRDID` 1.4.0):
     - All checks passed without issues.
 - GitHub Actions
     - Windows-latest (R release)
@@ -29,10 +30,13 @@ No other functional changes are included.
 
 ## R CMD check results
 
-0 errors | 0 warnings | 2 notes
+0 errors | 0 warnings | 0 notes
 
-* Package was archived on CRAN (see explanation above).
+* CRAN's incoming checks have previously flagged possibly misspelled
+  words in DESCRIPTION: "Callaway", "Sant'Anna". These are correctly
+  spelled author surnames cited in the package description (Callaway,
+  Goodman-Bacon, and Sant'Anna, 2025).
 
-* Possibly misspelled words in DESCRIPTION: "Callaway", "Sant'Anna".
-  These are correctly spelled author surnames cited in the package
-  description (Callaway, Goodman-Bacon, and Sant'Anna, 2025).
+## Reverse dependencies
+
+There are currently no CRAN reverse dependencies for this package.
