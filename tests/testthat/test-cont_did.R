@@ -168,3 +168,35 @@ test_that("level event study recovers a nonzero ATT", {
   expect_true(all(abs(es$Estimate[es$`Event Time` >= 0] - 0.5) < 0.2))
   expect_true(all(abs(es$Estimate[es$`Event Time` < 0]) < 0.2))
 })
+
+# One treated cohort with a linear dose response: ACRT(e = 0) is the slope of
+# the outcome change on the dose among the treated units.
+linear_dose_data <- function(n = 4000, p_treat = 0.2) {
+  set.seed(2)
+  treated <- rbinom(n, 1, p_treat)
+  dose <- ifelse(treated == 1, runif(n, 1, 5), 0)
+  df <- expand.grid(id = seq_len(n), period = 1:4)
+  df$G <- ifelse(treated[df$id] == 1, 3, 0)
+  df$D <- dose[df$id]
+  df$Y <- rnorm(n)[df$id] + 0.1 * df$period + df$D * (df$period >= 3) + rnorm(nrow(df))
+  df
+}
+
+test_that("the ACRT influence function gives the robust standard error of the dose slope", {
+  df <- linear_dose_data()
+  n <- length(unique(df$id))
+  res <- suppressWarnings(cont_did(
+    yname = "Y", dname = "D", gname = "G", tname = "period", idname = "id", data = df,
+    target_parameter = "slope", aggregation = "eventstudy", degree = 1,
+    treatment_type = "continuous", control_group = "nevertreated",
+    dose_est_method = "parametric", biters = 100
+  ))
+  pre <- df[df$period == 2 & df$G > 0, ]
+  post <- df[df$period == 3 & df$G > 0, ]
+  fit <- lm(post$Y - pre$Y ~ post$D)
+  i0 <- which(res$event_study$egt == 0)
+  expect_equal(res$event_study$att.egt[i0], unname(coef(fit)[2]), tolerance = 1e-8)
+  inf_func <- res$event_study$inf.function$dynamic.inf.func.e[, i0]
+  se_hc0 <- sqrt(sandwich::vcovHC(fit, type = "HC0")[2, 2])
+  expect_equal(sqrt(sum(inf_func^2)) / n, se_hc0, tolerance = 1e-8)
+})
