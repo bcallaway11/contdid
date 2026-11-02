@@ -486,9 +486,11 @@ cont_did_acrt <- function(
   # second component comes from having estimated the regression coefficients
   inffunc2 <- Xe %*% bread %*% as.matrix(c(0, colMeans(bs_deriv2))) # augment with 0 for intercept spot
 
-  # untreated don't contribute to influence function for ACRT
+  # untreated don't contribute to influence function for ACRT; the components
+  # above are on the scale of the n1 treated units, rescale to all n units
+  # (as for ATT(d) in ptetools::process_dose_gt)
   inffunc <- rep(0, nrow(post_data))
-  inffunc[dose > 0] <- as.numeric(inffunc1 + inffunc2)
+  inffunc[dose > 0] <- (length(dose) / sum(dose > 0)) * as.numeric(inffunc1 + inffunc2)
 
   # some hack code to get influence function right
   # in aggregations into effects at different doses
