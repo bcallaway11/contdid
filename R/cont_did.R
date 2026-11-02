@@ -425,25 +425,31 @@ cont_did_acrt <- function(
   }
 
   # if they were previously saved in shared_env, recover calculated knots
+  boundary_knots <- range(dose[dose > 0])
   if (!is.null(shared_env$knots)) {
     knots <- shared_env$knots
     dvals <- shared_env$dvals
+    boundary_knots <- shared_env$boundary_knots
   }
 
-  bs <- splines2::bSpline(dose[dose > 0], degree = degree, knots = knots) |> as.data.frame()
+  # evaluate every basis with the same boundary knots; otherwise bSpline() and
+  # dbs() take them from the range of the points they are evaluated at
+  bs <- splines2::bSpline(dose[dose > 0], degree = degree, knots = knots, Boundary.knots = boundary_knots) |>
+    as.data.frame()
   colnames(bs) <- paste0("bs_", colnames(bs))
   bs$dy <- dy[dose > 0]
 
   bs_reg <- lm(dy ~ ., data = bs)
 
   # dose_grid <- quantile(dose[dose > 0], probs = seq(0, 1, length.out = 100))
-  bs_grid <- splines2::bSpline(dvals, degree = degree, knots = knots) |> as.data.frame()
+  bs_grid <- splines2::bSpline(dvals, degree = degree, knots = knots, Boundary.knots = boundary_knots) |>
+    as.data.frame()
   colnames(bs_grid) <- colnames(model.matrix(bs_reg))[-1]
 
   att.d <- predict(bs_reg, newdata = bs_grid) - mean(dy[dose == 0])
 
   # Compute derivative of B-spline basis
-  bs_deriv <- splines2::dbs(dvals, degree = degree, knots = knots)
+  bs_deriv <- splines2::dbs(dvals, degree = degree, knots = knots, Boundary.knots = boundary_knots)
 
   # Compute derivative of E[Y|D]
   bs_reg_coef <- coef(bs_reg) # Coefficients from regression model
@@ -453,10 +459,11 @@ cont_did_acrt <- function(
   # previous results just plug in different values of D
   # here average across the distribution of the dose to
   # get average treatment effect parameters
-  bs_grid2 <- splines2::bSpline(dose[dose > 0], degree = degree, knots = knots) |> as.data.frame()
+  bs_grid2 <- splines2::bSpline(dose[dose > 0], degree = degree, knots = knots, Boundary.knots = boundary_knots) |>
+    as.data.frame()
   colnames(bs_grid2) <- colnames(model.matrix(bs_reg))[-1]
   att.overall <- mean(predict(bs_reg, newdata = bs_grid2)) - mean(dy[dose == 0])
-  bs_deriv2 <- splines2::dbs(dose[dose > 0], degree = degree, knots = knots)
+  bs_deriv2 <- splines2::dbs(dose[dose > 0], degree = degree, knots = knots, Boundary.knots = boundary_knots)
   acrt.overall <- mean(bs_deriv2 %*% bs_reg_coef[-1, drop = FALSE])
 
   # capture components of influence function
