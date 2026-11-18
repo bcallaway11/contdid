@@ -88,6 +88,9 @@ setup_pte_cont <- function(yname,
     }
 
     knots <- choose_knots_quantile(dose[dose > 0], num_knots)
+    # the B-spline basis is defined on the range of the positive doses; the
+    # same boundary knots must be used when evaluating it at dvals
+    boundary_knots <- range(dose[dose > 0])
     if (is.null(dvals)) {
         dvals <- quantile(dose[dose > 0], probs = seq(.1, .99, .01))
     }
@@ -96,6 +99,7 @@ setup_pte_cont <- function(yname,
     ptep$degree <- degree
     ptep$num_knots <- num_knots
     ptep$knots <- knots
+    ptep$boundary_knots <- boundary_knots
     ptep$dvals <- dvals
 
     ptep$target_parameter <- target_parameter
@@ -103,6 +107,7 @@ setup_pte_cont <- function(yname,
     ptep$treatment_type <- treatment_type
 
     shared_env$knots <- knots
+    shared_env$boundary_knots <- boundary_knots
     shared_env$dvals <- dvals
 
     ptep
