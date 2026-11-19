@@ -142,11 +142,17 @@ cont_did <- function(yname,
   if (anticipation != 0) warning("anticipation not tested yet, may not work")
   if (!is.null(weightsname)) warning("sampling weights not tested yet, may not work")
   assert_numeric(alp)
-  if (!is.null(clustervars)) warning("two-way clustering not currently supported")
   if (!is.null(est_method)) stop("covariates not supported yet, set est_method=NULL")
   assert_choice(base_period, choices = c("varying", "universal"))
   dose_est_method <- dose_est_method[1]
   assert_choice(dose_est_method, choices = c("parametric", "cck"))
+  # clustervars is passed on to ptetools, which clusters analytical and
+  # bootstrap standard errors (ptetools #6); the cck estimator does its own
+  # inference with npiv, which does not support clustering
+  if (!is.null(clustervars) && identical(dose_est_method, "cck")) {
+    stop("clustervars is not supported with dose_est_method = \"cck\".",
+         call. = FALSE)
+  }
 
   # TODO: checks that dose is constant over time and that treatment is staggered
   # check for balanced panel data
@@ -360,6 +366,8 @@ cont_did <- function(yname,
     # comparison group, varying base period) were always used (#19)
     control_group = control_group,
     base_period = base_period,
+    clustervars = clustervars,
+    bstrap = bstrap,
     gt_type = gt_type,
     cband = cband,
     alp = alp,

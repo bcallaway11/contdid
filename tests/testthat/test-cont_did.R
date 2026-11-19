@@ -328,3 +328,47 @@ test_that("control_group and base_period are used", {
   es_varying <- fit("nevertreated", "varying", "eventstudy")$event_study
   expect_false(isTRUE(all.equal(es$att.egt, es_varying$att.egt)))
 })
+
+# clustervars is passed on to ptetools (ptetools #6); it used to be ignored
+# with a warning.
+test_that("clustervars clusters the standard errors", {
+  set.seed(3)
+  n_cl <- 40
+  per_cl <- 15
+  n <- n_cl * per_cl
+  n_periods <- 4
+  cl <- rep(seq_len(n_cl), each = per_cl)
+  g_cl <- sample(c(0, 3, 4), n_cl, replace = TRUE)
+  dose <- ifelse(g_cl[cl] > 0, runif(n, 1, 5), 0)
+  d <- expand.grid(id = seq_len(n), period = seq_len(n_periods))
+  d$cl <- cl[d$id]
+  d$G <- g_cl[d$cl]
+  d$D <- dose[d$id]
+  shock <- matrix(rnorm(n_cl * n_periods), n_cl)
+  d$Y <- rnorm(n)[d$id] + shock[cbind(d$cl, d$period)] +
+    (d$G > 0 & d$period >= d$G) * 0.5 * d$D + rnorm(nrow(d))
+  run <- function(...) {
+    suppressWarnings(cont_did(
+      yname = "Y", tname = "period", idname = "id", dname = "D", gname = "G",
+      data = d, target_parameter = "level", aggregation = "eventstudy",
+      treatment_type = "continuous", control_group = "notyettreated",
+      bstrap = FALSE, ...
+    ))
+  }
+  unclustered <- run()
+  expect_equal(run(clustervars = "id")$event_study$se.egt,
+               unclustered$event_study$se.egt)
+  clustered <- run(clustervars = "cl")
+  expect_equal(clustered$event_study$att.egt, unclustered$event_study$att.egt)
+  # cluster-by-period shocks: clustering raises the standard errors
+  expect_gt(clustered$overall_att$overall.se,
+            1.5 * unclustered$overall_att$overall.se)
+  expect_error(
+    cont_did(yname = "Y", tname = "period", idname = "id", dname = "D",
+             gname = "G", data = d, target_parameter = "level",
+             aggregation = "dose", treatment_type = "continuous",
+             control_group = "notyettreated", dose_est_method = "cck",
+             clustervars = "cl"),
+    "not supported with dose_est_method"
+  )
+})

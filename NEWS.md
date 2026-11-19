@@ -29,6 +29,14 @@
   a universal base period, the outcome change is now computed between the
   base and current periods matched by unit, which also works when the base
   period comes after the current one (pre-treatment cells).
+* `clustervars` now clusters standard errors (analytical and bootstrap) at
+  a level above the unit, using ptetools' new support (ptetools #6). It was
+  previously ignored with a warning. It is not supported with
+  `dose_est_method = "cck"`.
+* `bstrap = FALSE` (analytical standard errors) is now passed on to ptetools;
+  it was ignored, so the multiplier bootstrap was always used. Analytical
+  standard errors are not available for dose-specific effects, where the
+  bootstrap is still used (with a warning).
 * Require `ptetools (>= 1.0.2)`, which computes the standard errors of
   `ATT(d)` and `ACRT(d)` with the same basis. With older `ptetools`
   these standard errors would be too large near the ends of the dose
