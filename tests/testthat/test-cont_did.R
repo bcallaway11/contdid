@@ -254,3 +254,26 @@ test_that("anticipation matches pte_default() with unequally spaced periods", {
     expect_equal(res$event_study$att.egt, expected$event_study$att.egt)
   }
 })
+
+# A cohort with no more treated units than dose-regression parameters gave
+# "something off with overall influence function" or "non-conformable
+# arguments" (ptetools #17); now the error says which cohort and why.
+test_that("a cohort too small for the dose regression gives a clear error", {
+  set.seed(1)
+  n <- 300
+  yrs <- c(2001, 2003, 2005, 2007)
+  grp <- c(rep(2005, 2), rep(2007, 120), rep(0, n - 122))
+  dose <- ifelse(grp > 0, runif(n, 1, 5), 0)
+  d <- data.frame(id = rep(seq_len(n), each = 4), year = rep(yrs, n),
+                  G = rep(grp, each = 4), D = rep(dose, each = 4))
+  d$Y <- rnorm(nrow(d))
+  expect_error(
+    suppressWarnings(cont_did(
+      yname = "Y", tname = "year", idname = "id", dname = "D", gname = "G",
+      data = d, target_parameter = "slope", aggregation = "dose",
+      treatment_type = "continuous", control_group = "notyettreated",
+      degree = 1, biters = 20
+    )),
+    "group 2005.*2 treated unit\\(s\\) but 2 parameters"
+  )
+})

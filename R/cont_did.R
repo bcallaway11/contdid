@@ -439,6 +439,22 @@ cont_did_acrt <- function(
   colnames(bs) <- paste0("bs_", colnames(bs))
   bs$dy <- dy[dose > 0]
 
+  # The dose regression needs more treated units than parameters (intercept
+  # plus spline terms). With as many units as parameters it fits them
+  # exactly (zero residuals, so a degenerate influence function); with
+  # fewer it is not identified. Either way, stop with a message that says
+  # what is wrong (ptetools #17).
+  n_treated <- nrow(bs)
+  n_params <- ncol(bs)  # spline terms + intercept (bs also holds dy)
+  # (ptetools adds which group and period this is to the error message)
+  if (n_treated <= n_params) {
+    stop("the dose regression has ", n_treated, " treated unit(s) but ",
+         n_params, " parameters (degree = ", degree, ", ", length(knots),
+         " interior knot(s), plus an intercept); it needs more treated ",
+         "units than parameters. Use a smaller degree or fewer knots, or ",
+         "drop this group.", call. = FALSE)
+  }
+
   bs_reg <- lm(dy ~ ., data = bs)
 
   # dose_grid <- quantile(dose[dose > 0], probs = seq(0, 1, length.out = 100))

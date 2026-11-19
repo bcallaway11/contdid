@@ -19,6 +19,10 @@
   `cont_two_by_two_subset()` now builds each cell with
   `ptetools::two_by_two_subset()`, so base periods, comparison groups and
   anticipation (in units of the time variable) follow `did::att_gt()`.
+* A timing group with no more treated units than parameters in the dose
+  regression now gives a clear error naming the group, instead of
+  "something off with overall influence function" or "non-conformable
+  arguments" (ptetools #17).
 * Require `ptetools (>= 1.0.2)`, which computes the standard errors of
   `ATT(d)` and `ACRT(d)` with the same basis. With older `ptetools`
   these standard errors would be too large near the ends of the dose
