@@ -96,9 +96,8 @@ We welcome feedback and encourage users to report bugs or other issues via the [
 
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
-devtools::load_all("~/Dropbox/BMisc")
-devtools::load_all("~/Dropbox/ptetools")
-devtools::load_all("~/Dropbox/contdid")
+library(contdid)
+library(ggplot2)
 ```
 
 ## Conceptual Setup

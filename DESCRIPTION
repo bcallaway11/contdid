@@ -1,6 +1,6 @@
 Package: contdid
 Title: Difference-in-Differences with a Continuous Treatment
-Version: 0.1.2
+Version: 0.1.3
 Authors@R: c(person("Brantly", "Callaway", email = "brantly.callaway@uga.edu", role = c("aut", "cre")),
              person("Andrew", "Goodman-Bacon", email = "andrew@goodman-bacon.com", role = c("aut")),
              person("Pedro H. C.", "Sant'Anna", email="pedro.h.santanna@emory.edu", role = c("aut")))
@@ -11,7 +11,7 @@ License: GPL-3
 Encoding: UTF-8
 Imports:
     BMisc (>= 1.4.8),
-    ptetools (>= 1.0.1),
+    ptetools (>= 1.0.2),
     checkmate,
     splines2,
     sandwich,
