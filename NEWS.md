@@ -59,6 +59,9 @@
 * Fixed `dose_est_method = "cck"` with `cband = FALSE`: the ACRT(d)
   critical value stayed at the uniform-band value instead of the pointwise
   one.
+* `control_group = "eventuallytreated"` now gives a clear "not supported
+  yet" error. It is not implemented, and was silently treated as
+  `"nevertreated"`.
 * Require `ptetools (>= 1.0.2)`, which computes the standard errors of
   `ATT(d)` and `ACRT(d)` with the same basis. With older `ptetools`
   these standard errors would be too large near the ends of the dose
