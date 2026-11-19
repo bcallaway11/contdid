@@ -248,7 +248,7 @@ test_that("anticipation matches pte_default() with unequally spaced periods", {
     ))
     expected <- suppressWarnings(ptetools::pte_default(
       yname = "Y", gname = "grp", tname = "year", idname = "id", data = df,
-      d_outcome = TRUE, est_method = "dr", anticipation = ant, biters = 0
+      d_outcome = TRUE, est_method = "aipw", anticipation = ant, biters = 0
     ))
     expect_equal(res$event_study$egt, expected$event_study$egt)
     expect_equal(res$event_study$att.egt, expected$event_study$att.egt)
