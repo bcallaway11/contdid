@@ -133,6 +133,16 @@ cont_did <- function(yname,
   assert_data_frame(data)
   assert_names(c(yname, dname, idname), subset.of = colnames(data))
   if (xformula != ~1) stop("covariates not currently supported, please use xformula=~1")
+  # The choice arguments' defaults list every option; resolve them to a
+  # single option (the first, i.e. the default, unless one is given), as
+  # match.arg() does. Without this, calling cont_did() with the defaults
+  # failed the assertions below (#12).
+  target_parameter <- match.arg(target_parameter)
+  aggregation <- match.arg(aggregation)
+  treatment_type <- match.arg(treatment_type)
+  dose_est_method <- match.arg(dose_est_method)
+  control_group <- match.arg(control_group)
+
   assert_choice(target_parameter, choices = c("level", "slope"))
   assert_choice(aggregation, choices = c("dose", "eventstudy", "none"))
   assert_choice(treatment_type, choices = c("continuous", "discrete"))
@@ -144,7 +154,6 @@ cont_did <- function(yname,
   assert_numeric(alp)
   if (!is.null(est_method)) stop("covariates not supported yet, set est_method=NULL")
   assert_choice(base_period, choices = c("varying", "universal"))
-  dose_est_method <- dose_est_method[1]
   assert_choice(dose_est_method, choices = c("parametric", "cck"))
   # clustervars is passed on to ptetools, which clusters analytical and
   # bootstrap standard errors (ptetools #6); the cck estimator does its own

@@ -43,6 +43,10 @@
   only; it is now rescaled to all units, as for `ATT(d)`. In simulations
   the reported SEs were about a third of the actual sampling variability
   before and match it now. Thanks to @AsadGudzevic94 (#17).
+* `cont_did()` now works with its default choice arguments
+  (`target_parameter`, `aggregation`, `treatment_type`, `dose_est_method`,
+  `control_group`), which are resolved with `match.arg()`. Before, each had
+  to be set explicitly or the call failed an argument check (#12).
 * Require `ptetools (>= 1.0.2)`, which computes the standard errors of
   `ATT(d)` and `ACRT(d)` with the same basis. With older `ptetools`
   these standard errors would be too large near the ends of the dose

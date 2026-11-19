@@ -404,3 +404,25 @@ test_that("the ACRT influence function gives the robust standard error of the do
   se_hc0 <- sqrt(sandwich::vcovHC(fit, type = "HC0")[2, 2])
   expect_equal(sqrt(sum(inf_func^2)) / n, se_hc0, tolerance = 1e-8)
 })
+
+# The choice arguments' defaults list every option and were not resolved
+# with match.arg(), so cont_did() failed when they were left at their
+# defaults (#12).
+test_that("cont_did() runs with default choice arguments", {
+  set.seed(1)
+  df <- simulate_contdid_data(
+    n = 500, num_time_periods = 4, num_groups = 4,
+    dose_linear_effect = 0.5, dose_quadratic_effect = 0
+  )
+  res <- suppressWarnings(cont_did(
+    yname = "Y", tname = "time_period", idname = "id", dname = "D",
+    gname = "G", data = df, biters = 20
+  ))
+  # defaults: level effects, aggregated by dose
+  expect_true(is.finite(res$overall_att))
+  expect_error(
+    cont_did(yname = "Y", tname = "time_period", idname = "id", dname = "D",
+             gname = "G", data = df, aggregation = "nope"),
+    "should be one of"
+  )
+})
