@@ -67,8 +67,12 @@ Default is "continuous".  "discrete" is not yet supported.}
 \item{required_pre_periods}{The number of required pre-treatment periods to implement
 the estimation strategy.  Default is 1.}
 
-\item{anticipation}{how many periods before the treatment actually takes
-place that it can have an effect on outcomes}
+\item{anticipation}{how long before the treatment actually takes place it
+can already affect outcomes, in units of the time variable \code{tname}
+(e.g., years), as in \code{did::att_gt()}. With unequally spaced periods
+this is not the same as a number of periods. Units first treated more
+than \code{anticipation} after the last period are treated as never
+treated.}
 
 \item{base_period}{The type of base period to use.  This only affects
 the numeric value of results in pre-treatment periods.  Results in
@@ -94,7 +98,12 @@ The default is NULL, in which case no sampling weights are used.}
 The default is "att".  Different estimation strategies can implement
 their own choices for \code{gt_type}}
 
-\item{biters}{number of bootstrap iterations; default is 100}
+\item{biters}{number of bootstrap iterations; default is 100.
+\code{biters = 0} skips the bootstrap: where \code{attgt_fun} returns an
+influence function this is the same as \code{bstrap = FALSE} (analytical,
+pointwise standard errors); where standard errors are only available
+from the bootstrap (the empirical bootstrap, dose-specific effects), the
+point estimates are returned with \code{NA} standard errors.}
 
 \item{cl}{number of clusters to be used when bootstrapping; default is 1}
 

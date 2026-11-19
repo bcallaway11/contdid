@@ -527,12 +527,11 @@ cont_did_acrt <- function(
 
 #' @title Continuous Two-by-Two Subset
 #'
-#' @description A function for computing a 2x2 subset of original data.
-#'  This function is adapted from `ptetools::two_by_two_subset` and allows
-#'  for the treatment to be continuous.
-#'  This is the subset with post treatment periods separately for the
-#'  treated group and comparison group and pre-treatment periods in the period
-#'  immediately before the treated group became treated.
+#' @description A function for computing a 2x2 subset of original data with
+#'  a continuous treatment. The cell is the same as in
+#'  `ptetools::two_by_two_subset()` (base period, comparison group, and
+#'  anticipation as in `did::att_gt()`); the local treatment variable `D` is
+#'  the dose for units in group `g` and 0 for comparison units.
 #'
 #' @param data the full dataset
 #' @param g the current group
@@ -555,56 +554,16 @@ cont_two_by_two_subset <- function(data,
                                    anticipation = 0,
                                    base_period = "varying",
                                    ...) {
-  # get the correct "base" period for this group
-  main.base.period <- g - anticipation - 1
+  # the cell itself (which units and periods) is ptetools' 2x2 cell, so the
+  # base period, comparison group and anticipation follow did::att_gt()
+  cell <- ptetools::two_by_two_subset(
+    data, g, tp,
+    control_group = control_group, anticipation = anticipation,
+    base_period = base_period, ...
+  )
 
-  #----------------------------------------------------
-  if (base_period == "varying") {
-    # if it's a pre-treatment time period (used for the
-    # pre-test, we need to adjust the base period)
-
-    # group not treated yet
-    if (tp < (g - anticipation)) {
-      # move to earlier period
-      # not going to include anticipation here
-      base.period <- tp - 1
-    } else {
-      # this is a post-treatment period
-      base.period <- main.base.period
-    }
-  } else {
-    base.period <- main.base.period
-  }
-  #----------------------------------------------------
-
-  #----------------------------------------------------
-  # collect the right subset of the data
-
-  # select rows using ptetools' internal (dot-prefixed) columns, never the
-  # user's own columns: group g and the comparison group, in the current
-  # and base periods
-  G <- data$.G
-  in_group <- if (control_group == "notyettreated") {
-    G == g | G > tp | G == 0
-  } else {
-    # use never treated group
-    G == g | G == 0
-  }
-  in_period <- data$.period == tp | data$.period == base.period
-  this.data <- data[which(in_group & in_period), , drop = FALSE]
-
-  # variable to keep track of pre/post periods
-  this.data$name <- ifelse(this.data$.period == tp, "post", "pre")
-
-  # local treatment: the dose for units in group g, 0 for comparison units
-  this.data$D <- this.data$.D * (this.data$.G == g)
-
-  # make this.data into gt_data_frame object (adds G, id, period, Y)
-  this.data <- gt_data_frame(this.data)
-
-  # number of observations used for this (g,t)
-  n1 <- length(unique(this.data$.id))
-  disidx <- unique(data$.id) %in% unique(this.data$.id)
-
-  list(gt_data = this.data, n1 = n1, disidx = disidx)
+  # local treatment: the dose (stored by setup_pte_cont() as .D) for units in
+  # group g, 0 for comparison units
+  cell$gt_data$D <- cell$gt_data$.D * (cell$gt_data$.G == g)
+  cell
 }

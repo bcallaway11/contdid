@@ -47,10 +47,9 @@ in this subset, and \code{disidx} a vector of the correct ids for this
 subset.
 }
 \description{
-A function for computing a 2x2 subset of original data.
-This function is adapted from \code{ptetools::two_by_two_subset} and allows
-for the treatment to be continuous.
-This is the subset with post treatment periods separately for the
-treated group and comparison group and pre-treatment periods in the period
-immediately before the treated group became treated.
+A function for computing a 2x2 subset of original data with
+a continuous treatment. The cell is the same as in
+\code{ptetools::two_by_two_subset()} (base period, comparison group, and
+anticipation as in \code{did::att_gt()}); the local treatment variable \code{D} is
+the dose for units in group \code{g} and 0 for comparison units.
 }

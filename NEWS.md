@@ -13,6 +13,12 @@
   stores the dose as an internal column, so it never overwrites a user's
   column, and selects each group-time subset using ptetools' internal
   columns only.
+* `anticipation` now works: `setup_pte_cont()` did not pass it (or
+  `base_period` and `required_pre_periods`) on to `ptetools::setup_pte()`,
+  so groups without a valid base period were kept and estimation failed.
+  `cont_two_by_two_subset()` now builds each cell with
+  `ptetools::two_by_two_subset()`, so base periods, comparison groups and
+  anticipation (in units of the time variable) follow `did::att_gt()`.
 * Require `ptetools (>= 1.0.2)`, which computes the standard errors of
   `ATT(d)` and `ACRT(d)` with the same basis. With older `ptetools`
   these standard errors would be too large near the ends of the dose

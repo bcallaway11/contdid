@@ -225,3 +225,32 @@ test_that("a group column named G with year-coded data gives the same results", 
   expect_true(all(is.finite(expected)))
   expect_equal(run("G"), expected)
 })
+
+# With anticipation and unequally spaced periods, the level event study must
+# match ptetools::pte_default() (the same cells, base periods and comparison
+# groups as did::att_gt()). setup_pte_cont() previously did not pass
+# anticipation on to ptetools::setup_pte().
+test_that("anticipation matches pte_default() with unequally spaced periods", {
+  set.seed(1234)
+  yrs <- c(2001, 2003, 2006, 2010)
+  df <- simulate_contdid_data(
+    n = 1000, num_time_periods = 4, num_groups = 4,
+    dose_linear_effect = 0.5, dose_quadratic_effect = 0
+  )
+  df$year <- yrs[df$time_period]
+  df$grp <- ifelse(df$G == 0, 0, yrs[pmax(df$G, 1)])
+  for (ant in c(0, 2)) {
+    res <- suppressWarnings(cont_did(
+      yname = "Y", tname = "year", idname = "id", dname = "D", gname = "grp",
+      data = df, target_parameter = "level", aggregation = "eventstudy",
+      treatment_type = "continuous", control_group = "notyettreated",
+      anticipation = ant, biters = 0
+    ))
+    expected <- suppressWarnings(ptetools::pte_default(
+      yname = "Y", gname = "grp", tname = "year", idname = "id", data = df,
+      d_outcome = TRUE, est_method = "dr", anticipation = ant, biters = 0
+    ))
+    expect_equal(res$event_study$egt, expected$event_study$egt)
+    expect_equal(res$event_study$att.egt, expected$event_study$att.egt)
+  }
+})
