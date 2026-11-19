@@ -68,7 +68,7 @@
   "level"`, `aggregation = "eventstudy"`) is supported, using ptetools'
   repeated cross sections DiD estimator; `idname` is then not needed. The
   dose-specific estimators (ATT(d), ACRT) still need panel data (#7).
-* Require `ptetools (>= 1.0.2)`, which computes the standard errors of
+* Require `ptetools (>= 1.1.0)`, which computes the standard errors of
   `ATT(d)` and `ACRT(d)` with the same basis. With older `ptetools`
   these standard errors would be too large near the ends of the dose
   range.

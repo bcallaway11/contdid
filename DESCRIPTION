@@ -11,7 +11,7 @@ License: GPL-3
 Encoding: UTF-8
 Imports:
     BMisc (>= 1.4.8),
-    ptetools (>= 1.0.2),
+    ptetools (>= 1.1.0),
     checkmate,
     splines2,
     sandwich,
