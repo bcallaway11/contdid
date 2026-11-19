@@ -11,6 +11,7 @@ cont_two_by_two_subset(
   control_group = "notyettreated",
   anticipation = 0,
   base_period = "varying",
+  require_comparison = TRUE,
   ...
 )
 }
@@ -37,6 +38,10 @@ where the base period is fixed in pre-treatment periods to be the period
 right before the treatment starts.  "Universal" is commonly used in
 difference-in-differences applications, but can be unnatural for other
 identification strategies.}
+
+\item{require_comparison}{if \code{FALSE} (used by \code{cont_did()}
+when no unit is untreated), the cell holds only group \code{g}'s own
+units, which is enough for the ACRT}
 
 \item{...}{extra arguments to get the subset correct}
 }

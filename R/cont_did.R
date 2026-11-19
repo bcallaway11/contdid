@@ -149,6 +149,11 @@ cont_did <- function(yname,
   if (aggregation == "none") stop("currently only support `dose` and `eventstudy` aggregations")
   if (allow_unbalanced_panel) stop("unbalanced panel not currently supported")
   assert_choice(control_group, choices = c("notyettreated", "nevertreated", "eventuallytreated"))
+  if (control_group == "eventuallytreated") {
+    # not implemented in ptetools; it used to be treated as "nevertreated"
+    stop("control_group = \"eventuallytreated\" is not supported yet.",
+         call. = FALSE)
+  }
   if (anticipation != 0) warning("anticipation not tested yet, may not work")
   if (!is.null(weightsname)) warning("sampling weights not tested yet, may not work")
   assert_numeric(alp)
@@ -162,14 +167,16 @@ cont_did <- function(yname,
   # untreated comparison units, but the ACRT is identified from variation in
   # the dose within each timing group (it only involves derivatives of the
   # dose-response curve). For target_parameter = "slope", estimate it with
-  # no comparison units (ptetools' control_group = "none"); level parameters
-  # are then reported as NA (#5).
+  # no comparison units: cells hold each cohort's own units
+  # (cont_two_by_two_subset()), and ptetools' setup is told not to require
+  # comparison units. Level parameters are then reported as NA (#5).
   no_untreated <- !any(data[[gname]] == 0, na.rm = TRUE)
+  require_comparison <- TRUE
   if (no_untreated && target_parameter == "slope") {
     message("No untreated units: the ACRT is estimated from variation in the ",
             "dose within each timing group. ATT(d) and the overall ATT are ",
             "not identified and are reported as NA.")
-    control_group <- "none"
+    require_comparison <- FALSE
   }
   if (no_untreated && target_parameter == "level" &&
         length(unique(data[[gname]])) == 1) {
@@ -334,6 +341,7 @@ cont_did <- function(yname,
       gt_type = gt_type,
       weightsname = weightsname,
       control_group = control_group,
+      require_comparison = require_comparison,
       biters = biters,
       cl = cl,
       call = call,
@@ -409,6 +417,7 @@ cont_did <- function(yname,
     control_group = control_group,
     base_period = base_period,
     clustervars = clustervars,
+    require_comparison = require_comparison,
     bstrap = bstrap,
     gt_type = gt_type,
     cband = cband,
@@ -519,7 +528,7 @@ cont_did_acrt <- function(
   colnames(bs_grid) <- colnames(model.matrix(bs_reg))[-1]
 
   # mean outcome change of the untreated comparison units; there are none
-  # with control_group = "none" (no untreated units, #5), and then ATT(d) is
+  # when there are no untreated units (#5), and then ATT(d) is
   # not identified (the ACRT below does not use them)
   untreated_mean <- if (any(dose == 0)) mean(dy[dose == 0]) else NA_real_
   att.d <- predict(bs_reg, newdata = bs_grid) - untreated_mean
@@ -617,6 +626,9 @@ cont_did_acrt <- function(
 #' @inheritParams ptetools::two_by_two_subset
 #' @param control_group whether to use "notyettreated" (default) or
 #'  "nevertreated"
+#' @param require_comparison if \code{FALSE} (used by \code{cont_did()}
+#'  when no unit is untreated), the cell holds only group \code{g}'s own
+#'  units, which is enough for the ACRT
 #' @param ... extra arguments to get the subset correct
 #'
 #' @return list that contains correct subset of data, \code{n1}
@@ -631,7 +643,23 @@ cont_two_by_two_subset <- function(data,
                                    control_group = "notyettreated",
                                    anticipation = 0,
                                    base_period = "varying",
+                                   require_comparison = TRUE,
                                    ...) {
+  if (!isTRUE(require_comparison)) {
+    # no untreated units (#5): the cell holds only cohort g's own units in
+    # the base and current periods, enough for the ACRT, which uses only
+    # variation in the dose within the cohort
+    base <- ptetools::pte_base_period(data, g, tp, anticipation, base_period)
+    rows <- which(data$.G == g & data$.period %in% c(base, tp))
+    gt_data <- data[rows, , drop = FALSE]
+    gt_data$name <- ifelse(gt_data$.period == tp, "post", "pre")
+    gt_data$D <- gt_data$.D
+    gt_data <- ptetools::gt_data_frame(gt_data)
+    all_ids <- unique(data$.id)
+    return(list(gt_data = gt_data, n1 = length(unique(gt_data$.id)),
+                disidx = all_ids %in% unique(gt_data$.id)))
+  }
+
   # the cell itself (which units and periods) is ptetools' 2x2 cell, so the
   # base period, comparison group and anticipation follow did::att_gt()
   cell <- ptetools::two_by_two_subset(
