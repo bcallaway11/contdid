@@ -194,12 +194,12 @@ summary(cd_res)
 #> 
 #> Overall ATT:  
 #>      ATT    Std. Error     [ 95%  Conf. Int.] 
-#>  -0.0265        0.0301    -0.0855      0.0325 
+#>  -0.0265        0.0362    -0.0974      0.0445 
 #> 
 #> 
 #> Overall ACRT:  
 #>    ACRT    Std. Error     [ 95%  Conf. Int.]  
-#>  0.1341        0.0485      0.039      0.2293 *
+#>  0.1341        0.0512     0.0338      0.2345 *
 #> ---
 #> Signif. codes: `*' confidence band does not cover 0
 ggcont_did(cd_res, type = "att")
@@ -248,16 +248,16 @@ summary(cd_res_es_level)
 #> 
 #> Overall ATT:  
 #>      ATT    Std. Error     [ 95%  Conf. Int.] 
-#>  -0.0265        0.0333    -0.0918      0.0389 
+#>  -0.0265        0.0268     -0.079      0.0261 
 #> 
 #> 
 #> Dynamic Effects:
 #>  Event Time Estimate Std. Error [95% Simult.  Conf. Band] 
-#>          -2  -0.0297     0.0512       -0.1555      0.0962 
-#>          -1   0.0210     0.0382       -0.0730      0.1149 
-#>           0  -0.0069     0.0372       -0.0984      0.0845 
-#>           1   0.0009     0.0436       -0.1063      0.1080 
-#>           2  -0.0512     0.0502       -0.1746      0.0722 
+#>          -2  -0.0297     0.0471       -0.1428      0.0835 
+#>          -1   0.0210     0.0441       -0.0848      0.1267 
+#>           0  -0.0069     0.0279       -0.0740      0.0601 
+#>           1   0.0009     0.0375       -0.0892      0.0909 
+#>           2  -0.0512     0.0516       -0.1751      0.0727 
 #> ---
 #> Signif. codes: `*' confidence band does not cover 0
 ggcont_did(cd_res_es_level)
@@ -293,16 +293,16 @@ summary(cd_res_es_slope)
 #> 
 #> Overall ACRT:  
 #>     ATT    Std. Error     [ 95%  Conf. Int.]  
-#>  0.1341        0.0584     0.0197      0.2485 *
+#>  0.1341        0.0547     0.0269      0.2414 *
 #> 
 #> 
 #> Dynamic Effects:
 #>  Event Time Estimate Std. Error [95% Simult.  Conf. Band]  
-#>          -2  -0.0701     0.0808       -0.2710      0.1308  
-#>          -1  -0.2212     0.0892       -0.4431      0.0007  
-#>           0   0.1592     0.0586        0.0136      0.3048 *
-#>           1   0.0551     0.0828       -0.1509      0.2610  
-#>           2  -0.5405     0.1154       -0.8275     -0.2535 *
+#>          -2  -0.0701     0.0745       -0.2460      0.1057  
+#>          -1  -0.2212     0.0823       -0.4155     -0.0268 *
+#>           0   0.1592     0.0588        0.0205      0.2979 *
+#>           1   0.0551     0.0764       -0.1252      0.2354  
+#>           2  -0.5405     0.1233       -0.8316     -0.2494 *
 #> ---
 #> Signif. codes: `*' confidence band does not cover 0
 ggcont_did(cd_res_es_slope)
@@ -314,16 +314,16 @@ style="width:100.0%" />
 ### Case 3: Data-Driven Nonparametric Model for Treatment Effects
 
 In most applications, it is hard to know the correct functional form for
-the treatment effects as a function of the dose. In Callaway et al.
-(2025), the approach we emphasize comes from Chen et al. (2025), and the
-`contdid` package uses their [`npiv`
-package](https://github.com/JeffreyRacine/npiv) to implement this
-approach. Code-wise, the only thing to change is to set the argument
-`dose_est_method="cck"`. \[Note that we currently only support this
-option for the case with two periods and no staggered adoption. With
-more periods, you can average the pre- and post-treatment periods to
-reduce it to a two period case and then run the code below; in fact,
-this is what we did in the application in our paper.\]
+the treatment effects as a function of the dose. In Callaway,
+Goodman-Bacon, and Sant’Anna (2025), the approach we emphasize comes
+from Chen, Christensen, and Kankanala (2025), and the `contdid` package
+uses their [`npiv` package](https://github.com/JeffreyRacine/npiv) to
+implement this approach. Code-wise, the only thing to change is to set
+the argument `dose_est_method="cck"`. \[Note that we currently only
+support this option for the case with two periods and no staggered
+adoption. With more periods, you can average the pre- and post-treatment
+periods to reduce it to a two period case and then run the code below;
+in fact, this is what we did in the application in our paper.\]
 
 ``` r
 # simulate data with only two periods
@@ -338,13 +338,13 @@ df2 <- simulate_contdid_data(
 )
 df2$D[df2$G == 0] <- 0
 head(df2)
-#>   id G        D time_period           Y
-#> 1  1 2 0.890987           1  1.84272906
-#> 2  1 2 0.890987           2  5.30890209
-#> 3  2 0 0.000000           1  0.59423237
-#> 4  2 0 0.000000           2  2.81443324
-#> 5  3 0 0.000000           1  1.77438193
-#> 6  3 0 0.000000           2 -0.01032246
+#>   id G         D time_period          Y
+#> 1  1 2 0.2919041           1  4.1285463
+#> 2  1 2 0.2919041           2  4.2832651
+#> 3  2 0 0.0000000           1  4.1202277
+#> 4  2 0 0.0000000           2  5.4831484
+#> 5  3 0 0.0000000           1 -0.9426794
+#> 6  3 0 0.0000000           2  0.4819572
 
 cd_res_cck <- cont_did(
   yname = "Y",
@@ -366,12 +366,12 @@ summary(cd_res_cck)
 #> 
 #> Overall ATT:  
 #>     ATT    Std. Error     [ 95%  Conf. Int.]  
-#>  0.3399         0.037     0.2673      0.4125 *
+#>  0.3789        0.0367     0.3069      0.4508 *
 #> 
 #> 
 #> Overall ACRT:  
-#>    ACRT    Std. Error     [ 95%  Conf. Int.]  
-#>  0.6595        0.1853     0.2964      1.0226 *
+#>   ACRT    Std. Error     [ 95%  Conf. Int.]  
+#>  1.036         0.266     0.5147      1.5572 *
 #> ---
 #> Signif. codes: `*' confidence band does not cover 0
 ggcont_did(cd_res_cck) +
@@ -390,12 +390,13 @@ style="width:100.0%" />
 
 ## References
 
-<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="refs" class="references csl-bib-body hanging-indent"
+entry-spacing="0">
 
 <div id="ref-callaway-goodman-santanna-2025" class="csl-entry">
 
 Callaway, Brantly, Andrew Goodman-Bacon, and Pedro H. C. Sant’Anna.
-2025. *Difference-in-Differences with a Continuous Treatment*.
+2025. “Difference-in-Differences with a Continuous Treatment.”
 
 </div>
 

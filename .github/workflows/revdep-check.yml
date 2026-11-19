@@ -1,32 +1,59 @@
-name: Revdep check
+name: Reverse Dependency Check
 
 on:
   pull_request:
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
-  revdep_check:
+  revdep:
     runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - uses: actions/checkout@v6
 
       - uses: r-lib/actions/setup-r@v2
         with:
-          r-version: 'release'
+          use-public-rspm: true
 
-      - uses: r-lib/actions/setup-r-dependencies@v2
-        with:
-          extra-packages: |
-            any::revdepcheck
-            any::rcmdcheck
-          needs: check
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libcurl4-openssl-dev libssl-dev libxml2-dev \
+            libfreetype6-dev libfontconfig1-dev \
+            libharfbuzz-dev libfribidi-dev \
+            libpng-dev libjpeg-dev libtiff5-dev \
+            gfortran libblas-dev liblapack-dev
 
-      - name: Reverse dependency check
-        run: Rscript -e 'revdepcheck::revdep_check(num_workers = 2)'
+      # revdepcheck is not on CRAN; install it from GitHub
+      - name: Install revdepcheck and remotes
+        run: |
+          install.packages("remotes")
+          remotes::install_github("r-lib/revdepcheck")
+        shell: Rscript {0}
 
-      - uses: actions/upload-artifact@v7
+      - name: Install package dependencies
+        run: remotes::install_deps(dependencies = TRUE, upgrade = "never")
+        shell: Rscript {0}
+
+      - name: Install local package
+        run: remotes::install_local(".", dependencies = FALSE, upgrade = "never", force = TRUE)
+        shell: Rscript {0}
+
+      - name: Run reverse dependency check
+        run: revdepcheck::revdep_check(num_workers = 4, timeout = as.difftime(45, units = "mins"))
+        shell: Rscript {0}
+
+      - name: Upload results
         if: always()
+        uses: actions/upload-artifact@v7
         with:
           name: revdep-results
           path: revdep/

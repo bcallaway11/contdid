@@ -1,3 +1,18 @@
+# contdid 0.1.3
+
+* Bug fix: `ATT(d)` and `ACRT(d)` from `cont_did()` with
+  `aggregation = "dose"` were evaluated with a different B-spline basis
+  than the one the dose regression was fitted with, unless `dvals`
+  spanned exactly the range of the positive doses. With the default
+  `dvals` (the 10% to 99% quantiles of the dose), the estimated
+  dose-response curve was biased, most of all near the ends of the dose
+  range. The basis now uses the range of the positive doses as its
+  boundary knots everywhere (#16; thanks to @AsadGudzevic94).
+* Require `ptetools (>= 1.0.2)`, which computes the standard errors of
+  `ATT(d)` and `ACRT(d)` with the same basis. With older `ptetools`
+  these standard errors would be too large near the ends of the dose
+  range.
+
 # contdid 0.1.2
 
 * Bug fix: `cont_did()` with `target_parameter = "level"` and
