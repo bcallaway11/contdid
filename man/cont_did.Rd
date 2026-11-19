@@ -234,7 +234,15 @@ extra estimate in an earlier period.}
 \item{print_details}{Whether or not to show details/progress of computations.
 Default is \code{FALSE}.}
 
-\item{cl}{number of clusters to be used when bootstrapping; default is 1}
+\item{cl}{parallel workers for the empirical bootstrap (the multiplier
+bootstrap does not need them); default is 1 (no parallelization). Either
+a number of workers or a cluster object from
+\code{parallel::makeCluster()}. A number uses forked processes on
+Unix/macOS; on Windows, which cannot fork, a cluster with that many
+workers is created and stopped automatically. Cluster workers are
+separate R sessions: they load the installed packages, and functions
+defined in your workspace (e.g. a custom \code{attgt_fun}) must not rely
+on other objects in your workspace.}
 
 \item{...}{Additional arguments to be passed to a custom \code{est_method}
 function. These are ignored when using built-in estimation methods

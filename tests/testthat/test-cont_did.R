@@ -277,3 +277,54 @@ test_that("a cohort too small for the dose regression gives a clear error", {
     "group 2005.*2 treated unit\\(s\\) but 2 parameters"
   )
 })
+
+# control_group and base_period were not passed on to ptetools::pte(), so
+# the defaults (not-yet-treated, varying) were always used (#19, #10).
+test_that("control_group and base_period are used", {
+  set.seed(11)
+  n <- 1500
+  n_periods <- 6
+  grp <- sample(c(0, 3, 5), n, replace = TRUE, prob = c(0.4, 0.3, 0.3))
+  dose <- ifelse(grp > 0, runif(n, 1, 10), 0)
+  a <- rnorm(n)
+  df <- do.call(rbind, lapply(seq_len(n_periods), function(t) {
+    data.frame(id = seq_len(n), period = t, G = grp, D = dose,
+               Y = a + 0.1 * t + ifelse(grp == 5, 0.15, 0) * t +
+                 ifelse(grp > 0 & t >= grp, 0.05 * dose, 0) +
+                 rnorm(n, sd = 0.1))
+  }))
+  fit <- function(control_group, base_period, aggregation = "dose") {
+    suppressWarnings(cont_did(
+      yname = "Y", tname = "period", idname = "id", dname = "D", gname = "G",
+      data = df, target_parameter = "level", aggregation = aggregation,
+      treatment_type = "continuous", control_group = control_group,
+      base_period = base_period, biters = 20, cband = FALSE, degree = 3
+    ))
+  }
+  # overall ATT by hand: ATT(g,t) = mean change of group g minus mean change
+  # of the comparison group, from base period g - 1; averaged over post
+  # periods within group, then across groups by size
+  change <- function(t, b) {
+    w <- reshape(df[df$period %in% c(t, b), c("id", "period", "Y")],
+                 idvar = "id", timevar = "period", direction = "wide")
+    w[[paste0("Y.", t)]] - w[[paste0("Y.", b)]]
+  }
+  hand <- function(in_control) {
+    att_g <- sapply(c(3, 5), function(g) {
+      mean(sapply(g:n_periods, function(t) {
+        dy <- change(t, g - 1)
+        mean(dy[grp == g]) - mean(dy[in_control(t)])
+      }))
+    })
+    weighted.mean(att_g, c(sum(grp == 3), sum(grp == 5)))
+  }
+  expect_equal(fit("nevertreated", "universal")$overall_att,
+               hand(function(t) grp == 0))
+  expect_equal(fit("notyettreated", "universal")$overall_att,
+               hand(function(t) grp == 0 | grp > t))
+  # a universal base period normalizes event time -1 to 0 (#10)
+  es <- fit("nevertreated", "universal", "eventstudy")$event_study
+  expect_equal(es$att.egt[es$egt == -1], 0)
+  es_varying <- fit("nevertreated", "varying", "eventstudy")$event_study
+  expect_false(isTRUE(all.equal(es$att.egt, es_varying$att.egt)))
+})

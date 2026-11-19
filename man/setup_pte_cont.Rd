@@ -105,7 +105,15 @@ pointwise standard errors); where standard errors are only available
 from the bootstrap (the empirical bootstrap, dose-specific effects), the
 point estimates are returned with \code{NA} standard errors.}
 
-\item{cl}{number of clusters to be used when bootstrapping; default is 1}
+\item{cl}{parallel workers for the empirical bootstrap (the multiplier
+bootstrap does not need them); default is 1 (no parallelization). Either
+a number of workers or a cluster object from
+\code{parallel::makeCluster()}. A number uses forked processes on
+Unix/macOS; on Windows, which cannot fork, a cluster with that many
+workers is created and stopped automatically. Cluster workers are
+separate R sessions: they load the installed packages, and functions
+defined in your workspace (e.g. a custom \code{attgt_fun}) must not rely
+on other objects in your workspace.}
 
 \item{dname}{The name of the treatment variable in the data.  The functionality of
 \code{cont_did} is different from the \code{did} package in that the treatment variable is

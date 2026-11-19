@@ -23,6 +23,12 @@
   regression now gives a clear error naming the group, instead of
   "something off with overall influence function" or "non-conformable
   arguments" (ptetools #17).
+* `control_group` and `base_period` are now used (#19, #10). They were not
+  passed on to ptetools, so `cont_did()` always used not-yet-treated
+  comparison units and a varying base period, whatever was requested. With
+  a universal base period, the outcome change is now computed between the
+  base and current periods matched by unit, which also works when the base
+  period comes after the current one (pre-treatment cells).
 * Require `ptetools (>= 1.0.2)`, which computes the standard errors of
   `ATT(d)` and `ACRT(d)` with the same basis. With older `ptetools`
   these standard errors would be too large near the ends of the dose

@@ -356,7 +356,10 @@ cont_did <- function(yname,
     treatment_type = treatment_type,
     dose_est_method = dose_est_method,
     anticipation = anticipation,
-    dose_est_method = dose_est_method,
+    # previously not passed on, so ptetools' defaults (not-yet-treated
+    # comparison group, varying base period) were always used (#19)
+    control_group = control_group,
+    base_period = base_period,
     gt_type = gt_type,
     cband = cband,
     alp = alp,
@@ -413,11 +416,14 @@ cont_did_acrt <- function(
     degree = 1,
     knots = numeric(0),
     ...) {
-  gt_data$dy <- BMisc::get_first_difference(gt_data, "id", "Y", "period")
-  # post_data <- subset(gt_data, name == "post")
-  post_data <- with(gt_data, subset(gt_data, name == "post"))
+  # outcome change from the base ("pre") period to the current ("post")
+  # period, matched by unit. With a universal base period the base period
+  # can come after the current one in pre-treatment cells, so differencing
+  # by period order (BMisc::get_first_difference()) gave NA there (#19).
+  post_data <- gt_data[gt_data$name == "post", , drop = FALSE]
+  pre_data <- gt_data[gt_data$name == "pre", , drop = FALSE]
   dose <- post_data$D
-  dy <- post_data$dy
+  dy <- post_data$Y - pre_data$Y[match(post_data$id, pre_data$id)]
 
   dose_est_method <- list(...)$dose_est_method
   if (dose_est_method == "cck") {
