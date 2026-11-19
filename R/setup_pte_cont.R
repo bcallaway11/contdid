@@ -1,3 +1,13 @@
+# =============================================================================
+# Title: Setup for Continuous Treatments
+# Description: setup_pte_cont(), which builds the pte_params object for
+#   cont_did(): the ptetools setup plus the dose column, spline knots and
+#   dose grid.
+# Author: Brant Callaway
+# Last update: 2026-11-19
+# Date created: 2025-01-21
+# =============================================================================
+
 #' @title Setup for DiD with a Continuous Treatment
 #'
 #' @description A function that creates a pte_params object, adding
@@ -41,7 +51,10 @@ setup_pte_cont <- function(yname,
                            num_knots = 0,
                            ...) {
 
-    data$D <- data[[dname]]
+    # the dose, stored like ptetools' other internal columns (dot-prefixed,
+    # so a user column named D is never overwritten); the subset function
+    # turns it into the cell's D
+    data$.D <- data[[dname]]
 
     # make the same call to ptetools::setup_pte as usual
     # we will add some things to this

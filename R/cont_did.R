@@ -3,7 +3,7 @@
 # Description: cont_did() and the (g,t)-level estimators and data subsetting
 #   it hands to ptetools for DiD with a continuous treatment
 # Author: Brant Callaway
-# Last update: 2026-10-29
+# Last update: 2026-11-19
 # Date created: 2024-09-11
 # =============================================================================
 
@@ -580,29 +580,31 @@ cont_two_by_two_subset <- function(data,
   #----------------------------------------------------
   # collect the right subset of the data
 
-  # get group g and not-yet-treated group
-  if (control_group == "notyettreated") {
-    this.data <- with(data, subset(data, G == g | G > tp | G == 0))
+  # select rows using ptetools' internal (dot-prefixed) columns, never the
+  # user's own columns: group g and the comparison group, in the current
+  # and base periods
+  G <- data$.G
+  in_group <- if (control_group == "notyettreated") {
+    G == g | G > tp | G == 0
   } else {
     # use never treated group
-    this.data <- with(data, subset(data, G == g | data$G == 0))
+    G == g | G == 0
   }
-
-  # get current period and base period data
-  this.data <- with(this.data, subset(this.data, period == tp | period == base.period))
+  in_period <- data$.period == tp | data$.period == base.period
+  this.data <- data[which(in_group & in_period), , drop = FALSE]
 
   # variable to keep track of pre/post periods
-  this.data$name <- ifelse(this.data$period == tp, "post", "pre")
+  this.data$name <- ifelse(this.data$.period == tp, "post", "pre")
 
-  # variable to indicate local treatment status
-  this.data$D <- this.data$D * (this.data$G == g)
+  # local treatment: the dose for units in group g, 0 for comparison units
+  this.data$D <- this.data$.D * (this.data$.G == g)
 
-  # make this.data into gt_data_frame object
+  # make this.data into gt_data_frame object (adds G, id, period, Y)
   this.data <- gt_data_frame(this.data)
 
   # number of observations used for this (g,t)
-  n1 <- length(unique(this.data$id))
-  disidx <- unique(data$id) %in% unique(this.data$id)
+  n1 <- length(unique(this.data$.id))
+  disidx <- unique(data$.id) %in% unique(this.data$.id)
 
   list(gt_data = this.data, n1 = n1, disidx = disidx)
 }

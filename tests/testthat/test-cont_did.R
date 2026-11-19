@@ -3,7 +3,7 @@
 # Description: Smoke and recovery tests for cont_did() across target
 #   parameters and aggregations, using simulate_contdid_data()
 # Author: Brant Callaway
-# Last update: 2026-10-29
+# Last update: 2026-11-19
 # Date created: 2025-02-04
 # =============================================================================
 
@@ -196,4 +196,32 @@ test_that("ATT(d) is evaluated with the basis the dose regression was fitted wit
   fit <- lm(Y ~ poly(D, 3, raw = TRUE), data = treated)
   expected <- predict(fit, newdata = data.frame(D = res$dose)) - mean(post$Y[post$G == 0])
   expect_equal(as.numeric(res$att.d), as.numeric(expected), tolerance = 1e-8)
+})
+
+# Year-coded groups and periods with a group column named G: ptetools
+# recodes groups and periods to 1..T internally, and before ptetools #13
+# that overwrote a user column named G, giving NaN estimates.
+test_that("a group column named G with year-coded data gives the same results", {
+  set.seed(1234)
+  df <- simulate_contdid_data(
+    n = 1000, num_time_periods = 4, num_groups = 4,
+    dose_linear_effect = 0.5, dose_quadratic_effect = 0
+  )
+  df$year <- df$time_period + 2000
+  df$grp <- ifelse(df$G == 0, 0, df$G + 2000)
+  run <- function(gname) {
+    d <- df
+    d[[gname]] <- df$grp
+    set.seed(7)
+    res <- suppressWarnings(cont_did(
+      yname = "Y", tname = "year", idname = "id", dname = "D",
+      gname = gname, data = d, target_parameter = "level",
+      aggregation = "eventstudy", treatment_type = "continuous",
+      control_group = "notyettreated", biters = 50
+    ))
+    c(res$overall_att$overall.att, res$event_study$att.egt)
+  }
+  expected <- run("grp")
+  expect_true(all(is.finite(expected)))
+  expect_equal(run("G"), expected)
 })

@@ -27,6 +27,6 @@ Suggests:
     testthat (>= 3.0.0),
     tidyr
 Config/testthat/edition: 3
-Config/roxygen2/version: 8.1.0
+Config/roxygen2/version: 8.1.1
 Remotes:
     bcallaway11/ptetools

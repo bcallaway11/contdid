@@ -8,6 +8,11 @@
   dose-response curve was biased, most of all near the ends of the dose
   range. The basis now uses the range of the positive doses as its
   boundary knots everywhere (#16; thanks to @AsadGudzevic94).
+* Bug fix: with groups and time periods coded as calendar years, naming the
+  group column `G` gave `NaN` estimates (ptetools #13). `cont_did()` now
+  stores the dose as an internal column, so it never overwrites a user's
+  column, and selects each group-time subset using ptetools' internal
+  columns only.
 * Require `ptetools (>= 1.0.2)`, which computes the standard errors of
   `ATT(d)` and `ACRT(d)` with the same basis. With older `ptetools`
   these standard errors would be too large near the ends of the dose
