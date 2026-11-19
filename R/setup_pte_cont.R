@@ -49,6 +49,7 @@ setup_pte_cont <- function(yname,
                            dvals = NULL,
                            degree = 1,
                            num_knots = 0,
+                           panel = TRUE,
                            ...) {
 
     # the dose, stored like ptetools' other internal columns (dot-prefixed,
@@ -64,6 +65,7 @@ setup_pte_cont <- function(yname,
         tname = tname,
         idname = idname,
         data = data,
+        panel = panel,
         xformula = xformula,
         required_pre_periods = required_pre_periods,
         anticipation = anticipation,
@@ -78,9 +80,16 @@ setup_pte_cont <- function(yname,
         ...
     )
 
-    first_period <- min(data[[tname]])
-    first_period_data <- data[data[[tname]] == first_period, ]
-    dose <- first_period_data[[dname]]
+    # dose distribution: each unit's dose in the first period (panel), or
+    # every observation's dose (repeated cross sections, where observations
+    # in different periods are different units)
+    if (isTRUE(panel)) {
+        first_period <- min(data[[tname]])
+        first_period_data <- data[data[[tname]] == first_period, ]
+        dose <- first_period_data[[dname]]
+    } else {
+        dose <- data[[dname]]
+    }
 
     # data sanity checks
     #------------------------

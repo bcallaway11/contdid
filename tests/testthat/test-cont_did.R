@@ -473,3 +473,36 @@ test_that("ACRT is estimated without untreated units", {
     "use target_parameter = \"slope\""
   )
 })
+
+# Repeated cross sections (#7): the level event study runs a binary-treatment
+# DiD in each cell, so it must equal ptetools::pte_default(panel = FALSE)
+# with the binary treatment; the dose-specific estimators are not supported
+# yet.
+test_that("level event study works with repeated cross sections", {
+  set.seed(7)
+  n_per <- 800
+  d <- do.call(rbind, lapply(1:4, function(t) {
+    grp <- sample(c(0, 3, 4), n_per, replace = TRUE)
+    dose <- ifelse(grp > 0, runif(n_per, 1, 5), 0)
+    data.frame(period = t, G = grp, D = dose,
+               Y = 0.3 * t + 0.5 * grp +
+                 (grp > 0 & t >= grp) * (0.5 + 0.2 * dose) + rnorm(n_per))
+  }))
+  res <- suppressWarnings(cont_did(
+    yname = "Y", tname = "period", dname = "D", gname = "G", data = d,
+    panel = FALSE, target_parameter = "level", aggregation = "eventstudy",
+    control_group = "notyettreated", biters = 0
+  ))
+  expected <- suppressWarnings(ptetools::pte_default(
+    yname = "Y", gname = "G", tname = "period", data = d, panel = FALSE,
+    control_group = "notyettreated", biters = 0
+  ))
+  expect_equal(res$event_study$att.egt, expected$event_study$att.egt)
+  expect_equal(res$event_study$se.egt, expected$event_study$se.egt)
+  expect_error(
+    cont_did(yname = "Y", tname = "period", dname = "D", gname = "G",
+             data = d, panel = FALSE, target_parameter = "slope",
+             aggregation = "dose"),
+    "only target_parameter = \"level\" with aggregation = \"eventstudy\""
+  )
+})

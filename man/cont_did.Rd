@@ -9,7 +9,7 @@ cont_did(
   dname,
   gname = NULL,
   tname,
-  idname,
+  idname = NULL,
   xformula = ~1,
   data,
   target_parameter = c("level", "slope"),
@@ -20,6 +20,7 @@ cont_did(
   degree = 3,
   num_knots = 0,
   allow_unbalanced_panel = FALSE,
+  panel = TRUE,
   control_group = c("notyettreated", "nevertreated", "eventuallytreated"),
   anticipation = 0,
   weightsname = NULL,
@@ -104,6 +105,14 @@ value is \code{FALSE} which means that \code{\link[did:att_gt]{att_gt()}} will d
 all units where data is not observed in all periods.
 The advantage of this is that the computations are faster
 (sometimes substantially).}
+
+\item{panel}{Whether or not the data is a panel dataset.
+The panel dataset should be provided in long format -- that
+is, where each row corresponds to a unit observed at a
+particular point in time.  The default is TRUE.  When
+using a panel dataset, the variable \code{idname} must
+be set.  When \code{panel=FALSE}, the data is treated
+as repeated cross sections.}
 
 \item{control_group}{Which units to use as the control group.
 The default is "nevertreated" which sets the control group

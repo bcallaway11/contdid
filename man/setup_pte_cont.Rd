@@ -28,6 +28,7 @@ setup_pte_cont(
   dvals = NULL,
   degree = 1,
   num_knots = 0,
+  panel = TRUE,
   ...
 )
 }
@@ -137,6 +138,9 @@ the group of treated units that only that is a cubic polynomial in the dose.  Se
 \item{num_knots}{The number of knots to include for the B-Spline.  The default is 0
 so that the spline is global (i.e., this will amount to fitting a global polynomial).
 There is a bias-variance tradeoff for including more or less knots.}
+
+\item{panel}{Whether the data are panel data.  The default is TRUE.  Set to
+FALSE for repeated cross sections.}
 
 \item{...}{additional arguments}
 }

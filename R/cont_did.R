@@ -104,7 +104,7 @@ cont_did <- function(yname,
                      dname,
                      gname = NULL,
                      tname,
-                     idname,
+                     idname = NULL,
                      xformula = ~1,
                      data,
                      target_parameter = c("level", "slope"),
@@ -115,6 +115,7 @@ cont_did <- function(yname,
                      degree = 3,
                      num_knots = 0,
                      allow_unbalanced_panel = FALSE,
+                     panel = TRUE,
                      control_group = c("notyettreated", "nevertreated", "eventuallytreated"),
                      anticipation = 0,
                      weightsname = NULL,
@@ -132,6 +133,13 @@ cont_did <- function(yname,
   # check argument formatting
   assert_data_frame(data)
   assert_names(c(yname, dname, idname), subset.of = colnames(data))
+  # repeated cross sections (panel = FALSE, #7): so far only the level event
+  # study, which runs a binary-treatment DiD in each cell and can use
+  # ptetools' repeated cross sections estimator. The dose-specific
+  # estimators difference each unit's outcomes, which needs panel data.
+  if (isTRUE(panel) && is.null(idname)) {
+    stop("idname is required with panel data (panel = TRUE).", call. = FALSE)
+  }
   if (xformula != ~1) stop("covariates not currently supported, please use xformula=~1")
   # The choice arguments' defaults list every option; resolve them to a
   # single option (the first, i.e. the default, unless one is given), as
@@ -148,6 +156,17 @@ cont_did <- function(yname,
   assert_choice(treatment_type, choices = c("continuous", "discrete"))
   if (aggregation == "none") stop("currently only support `dose` and `eventstudy` aggregations")
   if (allow_unbalanced_panel) stop("unbalanced panel not currently supported")
+  if (!isTRUE(panel)) {
+    if (!(target_parameter == "level" && aggregation == "eventstudy")) {
+      stop("With repeated cross sections (panel = FALSE), only ",
+           "target_parameter = \"level\" with aggregation = \"eventstudy\" ",
+           "is supported so far.", call. = FALSE)
+    }
+    if (is.null(gname)) {
+      stop("gname is required with repeated cross sections ",
+           "(panel = FALSE).", call. = FALSE)
+    }
+  }
   assert_choice(control_group, choices = c("notyettreated", "nevertreated", "eventuallytreated"))
   if (control_group == "eventuallytreated") {
     # not implemented in ptetools; it used to be treated as "nevertreated"
@@ -213,7 +232,7 @@ cont_did <- function(yname,
   }
 
   if (treatment_type == "continuous" && aggregation == "eventstudy" && target_parameter == "level") {
-    attgt_fun <- cont_did_att_level
+    attgt_fun <- if (isTRUE(panel)) cont_did_att_level else cont_did_att_level_rcs
     gt_type <- "att"
   }
 
@@ -404,7 +423,8 @@ cont_did <- function(yname,
     idname = idname,
     data = data,
     setup_pte_fun = setup_pte_cont,
-    subset_fun = cont_two_by_two_subset,
+    subset_fun = if (isTRUE(panel)) cont_two_by_two_subset else cont_rcs_subset,
+    panel = panel,
     attgt_fun = attgt_fun,
     xformla = xformula,
     target_parameter = target_parameter,
@@ -452,6 +472,35 @@ cont_did <- function(yname,
 cont_did_att_level <- function(gt_data, ...) {
   gt_data$D <- as.numeric(gt_data$D > 0)
   ptetools::did_attgt(gt_data, ...)
+}
+
+# Level ATT(g,t) with repeated cross sections (#7): the same binary
+# treated/comparison indicator as cont_did_att_level(), with ptetools'
+# repeated cross sections DiD estimator.
+#
+# Arguments:
+#   gt_data - gt_data_frame for this (g,t), with D equal to the dose
+#   ...     - passed on to ptetools::did_rcs_attgt
+#
+# Returns: ptetools::attgt_if object for the binarized-treatment ATT(g,t)
+cont_did_att_level_rcs <- function(gt_data, ...) {
+  gt_data$D <- as.numeric(gt_data$D > 0)
+  ptetools::did_rcs_attgt(gt_data, ...)
+}
+
+# Group-time cell for repeated cross sections (#7): ptetools' repeated
+# cross sections 2x2 cell, with the local treatment D equal to the dose for
+# group g's observations and 0 for comparison observations (as in
+# cont_two_by_two_subset()).
+cont_rcs_subset <- function(data, g, tp, control_group = "notyettreated",
+                            anticipation = 0, base_period = "varying", ...) {
+  cell <- ptetools::two_by_two_rcs_subset(
+    data, g, tp,
+    control_group = control_group, anticipation = anticipation,
+    base_period = base_period, ...
+  )
+  cell$gt_data$D <- cell$gt_data$.D * (cell$gt_data$.G == g)
+  cell
 }
 
 #' @title Compute ACRT's for a Timing Group and Time Period
