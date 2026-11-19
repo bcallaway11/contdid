@@ -59,9 +59,10 @@
 * Fixed `dose_est_method = "cck"` with `cband = FALSE`: the ACRT(d)
   critical value stayed at the uniform-band value instead of the pointwise
   one.
-* `control_group = "eventuallytreated"` now gives a clear "not supported
-  yet" error. It is not implemented, and was silently treated as
-  `"nevertreated"`.
+* `control_group = "eventuallytreated"` now works (ptetools #29): the
+  comparison units are not-yet-treated units other than the never treated,
+  and the latest-treated cohort serves only as a comparison group. It used
+  to be silently treated as `"nevertreated"`.
 * Repeated cross sections: `cont_did()` gains `panel` (default `TRUE`).
   With `panel = FALSE`, the level event study (`target_parameter =
   "level"`, `aggregation = "eventstudy"`) is supported, using ptetools'

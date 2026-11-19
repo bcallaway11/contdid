@@ -22,8 +22,8 @@ cont_two_by_two_subset(
 
 \item{tp}{the current time period}
 
-\item{control_group}{whether to use "notyettreated" (default) or
-"nevertreated"}
+\item{control_group}{whether to use "notyettreated" (default),
+"nevertreated" or "eventuallytreated"}
 
 \item{anticipation}{the number of periods of anticipation (i.e., number
 of periods before the treatment happens where the treatment can "already"

@@ -322,6 +322,29 @@ test_that("control_group and base_period are used", {
                hand(function(t) grp == 0))
   expect_equal(fit("notyettreated", "universal")$overall_att,
                hand(function(t) grp == 0 | grp > t))
+  # eventually treated (ptetools #29): never-treated units are dropped, so
+  # cohort 5 is the comparison group for cohort 3 in periods 3 and 4, and
+  # periods 5 and 6 and cohort 5 itself are not estimated
+  att_3 <- mean(sapply(3:4, function(t) {
+    dy <- change(t, 2)
+    mean(dy[grp == 3]) - mean(dy[grp == 5])
+  }))
+  set.seed(3)
+  ev <- fit("eventuallytreated", "universal")
+  expect_equal(ev$overall_att, att_3)
+  # dropping the never treated by hand gives the same ATT(d) and ACRT(d)
+  df_ever <- df[df$G != 0, ]
+  set.seed(3)
+  ny <- suppressWarnings(cont_did(
+    yname = "Y", tname = "period", idname = "id", dname = "D", gname = "G",
+    data = df_ever, target_parameter = "level", aggregation = "dose",
+    treatment_type = "continuous", control_group = "notyettreated",
+    base_period = "universal", biters = 20, cband = FALSE, degree = 3
+  ))
+  expect_equal(ev$att.d, ny$att.d)
+  expect_equal(ev$acrt.d, ny$acrt.d)
+  # (same bootstrap draws: the same units and seed)
+  expect_equal(ev$overall_att_se, ny$overall_att_se)
   # a universal base period normalizes event time -1 to 0 (#10)
   es <- fit("nevertreated", "universal", "eventstudy")$event_study
   expect_equal(es$att.egt[es$egt == -1], 0)

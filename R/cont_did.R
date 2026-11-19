@@ -168,9 +168,12 @@ cont_did <- function(yname,
     }
   }
   assert_choice(control_group, choices = c("notyettreated", "nevertreated", "eventuallytreated"))
-  if (control_group == "eventuallytreated") {
-    # not implemented in ptetools; it used to be treated as "nevertreated"
-    stop("control_group = \"eventuallytreated\" is not supported yet.",
+  # "eventuallytreated" (ptetools #29): not-yet-treated comparison units
+  # other than the never treated. The cck estimator allows only one treated
+  # timing group, so it has no eventually-treated comparison units.
+  if (control_group == "eventuallytreated" && identical(dose_est_method, "cck")) {
+    stop("control_group = \"eventuallytreated\" needs at least two treated ",
+         "timing groups, which dose_est_method = \"cck\" does not support.",
          call. = FALSE)
   }
   if (anticipation != 0) warning("anticipation not tested yet, may not work")
@@ -677,8 +680,8 @@ cont_did_acrt <- function(
 #' @param g the current group
 #' @param tp the current time period
 #' @inheritParams ptetools::two_by_two_subset
-#' @param control_group whether to use "notyettreated" (default) or
-#'  "nevertreated"
+#' @param control_group whether to use "notyettreated" (default),
+#'  "nevertreated" or "eventuallytreated"
 #' @param require_comparison if \code{FALSE} (used by \code{cont_did()}
 #'  when no unit is untreated), the cell holds only group \code{g}'s own
 #'  units, which is enough for the ACRT
