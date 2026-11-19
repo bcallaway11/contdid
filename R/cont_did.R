@@ -232,7 +232,11 @@ cont_did <- function(yname,
   }
 
   if (treatment_type == "continuous" && aggregation == "eventstudy" && target_parameter == "level") {
-    attgt_fun <- if (isTRUE(panel)) cont_did_att_level else cont_did_att_level_rcs
+    attgt_fun <- if (isTRUE(panel)) {
+      cont_did_att_level
+    } else {
+      cont_did_att_level_rcs
+    }
     gt_type <- "att"
   }
 
