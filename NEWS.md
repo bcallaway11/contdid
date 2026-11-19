@@ -37,6 +37,12 @@
   it was ignored, so the multiplier bootstrap was always used. Analytical
   standard errors are not available for dose-specific effects, where the
   bootstrap is still used (with a warning).
+* Bug fix: standard errors of ACRT (overall and event study) were too small
+  by a factor equal to the share of treated units in each group-time cell
+  (#13). The ACRT influence function was on the scale of the treated units
+  only; it is now rescaled to all units, as for `ATT(d)`. In simulations
+  the reported SEs were about a third of the actual sampling variability
+  before and match it now. Thanks to @AsadGudzevic94 (#17).
 * Require `ptetools (>= 1.0.2)`, which computes the standard errors of
   `ATT(d)` and `ACRT(d)` with the same basis. With older `ptetools`
   these standard errors would be too large near the ends of the dose
