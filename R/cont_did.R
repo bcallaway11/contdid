@@ -158,6 +158,26 @@ cont_did <- function(yname,
   # clustervars is passed on to ptetools, which clusters analytical and
   # bootstrap standard errors (ptetools #6); the cck estimator does its own
   # inference with npiv, which does not support clustering
+  # No untreated units (no gname = 0): ATT(d) and other level parameters need
+  # untreated comparison units, but the ACRT is identified from variation in
+  # the dose within each timing group (it only involves derivatives of the
+  # dose-response curve). For target_parameter = "slope", estimate it with
+  # no comparison units (ptetools' control_group = "none"); level parameters
+  # are then reported as NA (#5).
+  no_untreated <- !any(data[[gname]] == 0, na.rm = TRUE)
+  if (no_untreated && target_parameter == "slope") {
+    message("No untreated units: the ACRT is estimated from variation in the ",
+            "dose within each timing group. ATT(d) and the overall ATT are ",
+            "not identified and are reported as NA.")
+    control_group <- "none"
+  }
+  if (no_untreated && target_parameter == "level" &&
+        length(unique(data[[gname]])) == 1) {
+    stop("Every unit is treated at the same time and none is untreated, so ",
+         "ATT(d) and other level parameters are not identified. The ACRT is: ",
+         "use target_parameter = \"slope\".", call. = FALSE)
+  }
+
   if (!is.null(clustervars) && identical(dose_est_method, "cck")) {
     stop("clustervars is not supported with dose_est_method = \"cck\".",
          call. = FALSE)
@@ -198,7 +218,8 @@ cont_did <- function(yname,
 
   # cck estimator not supported with staggered adoption yet
   if (dose_est_method == "cck") {
-    if (length(unique(data[[gname]])) != 2) {
+    # one treated timing group (plus, possibly, untreated units)
+    if (length(setdiff(unique(data[[gname]]), 0)) != 1) {
       stop("cck estimator not supported with staggered adoption yet")
     }
 
@@ -216,7 +237,9 @@ cont_did <- function(yname,
     post_data <- subset(data, data[[tname]] == maxT)
     dose <- post_data[[dname]]
     dy <- post_data$.dy
-    m0 <- mean(dy[dose == 0])
+    # center by the untreated units' mean change; with no untreated units
+    # (#5) only the ACRT is identified, and centering does not affect it
+    m0 <- if (no_untreated) 0 else mean(dy[dose == 0])
     dy_centered <- dy - m0
     if (is.null(dvals)) {
       # choose dvals the same way as npiv::npiv
@@ -252,7 +275,13 @@ cont_did <- function(yname,
 
     if (!cband) {
       att.d_crit.val <- qnorm(1 - alp / 2)
-      att.d_crit.val <- qnorm(1 - alp / 2)
+      acrt.d_crit.val <- qnorm(1 - alp / 2)
+    }
+    if (no_untreated) {
+      # ATT(d) needs untreated comparison units (#5)
+      att.d <- rep(NA_real_, length(att.d))
+      att.d_se <- rep(NA_real_, length(att.d))
+      att.d_crit.val <- NA_real_
     }
 
     # Compute average ACR
@@ -304,13 +333,14 @@ cont_did <- function(yname,
       boot_type = boot_type,
       gt_type = gt_type,
       weightsname = weightsname,
+      control_group = control_group,
       biters = biters,
       cl = cl,
       call = call,
       ...
     )
 
-    overall_att_res <- suppressWarnings(
+    overall_att_res <- if (no_untreated) NULL else suppressWarnings(
       ptetools::pte_default(
         yname = ptep$yname,
         gname = ptep$gname,
@@ -336,9 +366,12 @@ cont_did <- function(yname,
 
     out <- dose_obj(
       dose = dose_out,
-      overall_att = overall_att_res$overall_att$overall.att,
-      overall_att_se = overall_att_res$overall_att$overall.se,
-      overall_att_inffunc = overall_att_res$overall_att$inf.func[[1]],
+      overall_att = if (no_untreated) NA_real_ else
+        overall_att_res$overall_att$overall.att,
+      overall_att_se = if (no_untreated) NA_real_ else
+        overall_att_res$overall_att$overall.se,
+      overall_att_inffunc = if (no_untreated) NULL else
+        overall_att_res$overall_att$inf.func[[1]],
       overall_acrt = average_acr,
       overall_acrt_se = se_avg_acr,
       overall_acrt_inffunc = infl_avg_acr,
@@ -485,7 +518,11 @@ cont_did_acrt <- function(
     as.data.frame()
   colnames(bs_grid) <- colnames(model.matrix(bs_reg))[-1]
 
-  att.d <- predict(bs_reg, newdata = bs_grid) - mean(dy[dose == 0])
+  # mean outcome change of the untreated comparison units; there are none
+  # with control_group = "none" (no untreated units, #5), and then ATT(d) is
+  # not identified (the ACRT below does not use them)
+  untreated_mean <- if (any(dose == 0)) mean(dy[dose == 0]) else NA_real_
+  att.d <- predict(bs_reg, newdata = bs_grid) - untreated_mean
 
   # Compute derivative of B-spline basis
   bs_deriv <- splines2::dbs(dvals, degree = degree, knots = knots, Boundary.knots = boundary_knots)
@@ -501,7 +538,7 @@ cont_did_acrt <- function(
   bs_grid2 <- splines2::bSpline(dose[dose > 0], degree = degree, knots = knots, Boundary.knots = boundary_knots) |>
     as.data.frame()
   colnames(bs_grid2) <- colnames(model.matrix(bs_reg))[-1]
-  att.overall <- mean(predict(bs_reg, newdata = bs_grid2)) - mean(dy[dose == 0])
+  att.overall <- mean(predict(bs_reg, newdata = bs_grid2)) - untreated_mean
   bs_deriv2 <- splines2::dbs(dose[dose > 0], degree = degree, knots = knots, Boundary.knots = boundary_knots)
   acrt.overall <- mean(bs_deriv2 %*% bs_reg_coef[-1, drop = FALSE])
 

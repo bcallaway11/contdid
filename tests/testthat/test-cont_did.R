@@ -426,3 +426,50 @@ test_that("cont_did() runs with default choice arguments", {
     "should be one of"
   )
 })
+
+# With no untreated units, the ACRT is still identified from variation in the
+# dose within each timing group, while ATT(d) is not (#5).
+test_that("ACRT is estimated without untreated units", {
+  set.seed(1)
+  n <- 2000
+  dose <- runif(n, 1, 5)
+  d <- data.frame(id = rep(seq_len(n), each = 2), period = rep(1:2, n),
+                  G = 2, D = rep(dose, each = 2))
+  d$Y <- rnorm(n)[d$id] + (d$period == 2) * (1 + 0.5 * d$D) +
+    rnorm(nrow(d))
+  es <- suppressMessages(cont_did(
+    yname = "Y", tname = "period", idname = "id", dname = "D", gname = "G",
+    data = d, target_parameter = "slope", aggregation = "eventstudy",
+    degree = 1, biters = 0
+  ))
+  # with a linear dose specification, ACRT(e = 0) is the slope of the
+  # outcome change on the dose, with the HC0 robust standard error
+  pre <- d[d$period == 1, ]
+  post <- d[d$period == 2, ]
+  fit <- lm(post$Y - pre$Y ~ post$D)
+  i0 <- which(es$event_study$egt == 0)
+  expect_equal(es$event_study$att.egt[i0], unname(coef(fit)[2]))
+  expect_equal(es$event_study$se.egt[i0],
+               sqrt(sandwich::vcovHC(fit, type = "HC0")[2, 2]))
+
+  dose_res <- suppressMessages(cont_did(
+    yname = "Y", tname = "period", idname = "id", dname = "D", gname = "G",
+    data = d, target_parameter = "slope", aggregation = "dose",
+    degree = 1, biters = 0
+  ))
+  expect_equal(dose_res$overall_acrt, unname(coef(fit)[2]))
+  expect_true(is.na(dose_res$overall_att))
+  expect_true(all(is.na(dose_res$att.d)))
+  expect_message(
+    cont_did(yname = "Y", tname = "period", idname = "id", dname = "D",
+             gname = "G", data = d, target_parameter = "slope",
+             aggregation = "dose", degree = 1, biters = 0),
+    "No untreated units"
+  )
+  expect_error(
+    cont_did(yname = "Y", tname = "period", idname = "id", dname = "D",
+             gname = "G", data = d, target_parameter = "level",
+             aggregation = "dose"),
+    "use target_parameter = \"slope\""
+  )
+})

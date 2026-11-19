@@ -47,6 +47,18 @@
   (`target_parameter`, `aggregation`, `treatment_type`, `dose_est_method`,
   `control_group`), which are resolved with `match.arg()`. Before, each had
   to be set explicitly or the call failed an argument check (#12).
+* The ACRT can now be estimated when no unit is untreated, e.g. when every
+  unit is treated at the same time with different doses (#5). It only
+  involves derivatives of the dose-response curve, so it is identified from
+  variation in the dose within each timing group. With
+  `target_parameter = "slope"` and no untreated units, `cont_did()` now
+  estimates it (with a message), for both aggregations and for
+  `dose_est_method = "cck"`. ATT(d) and the overall ATT are not identified
+  without untreated units and are reported as `NA`; level parameters give a
+  clear error when every unit is treated at the same time.
+* Fixed `dose_est_method = "cck"` with `cband = FALSE`: the ACRT(d)
+  critical value stayed at the uniform-band value instead of the pointwise
+  one.
 * Require `ptetools (>= 1.0.2)`, which computes the standard errors of
   `ATT(d)` and `ACRT(d)` with the same basis. With older `ptetools`
   these standard errors would be too large near the ends of the dose
