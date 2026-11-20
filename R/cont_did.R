@@ -25,6 +25,13 @@
 #' @inheritParams did::att_gt
 #' @inheritParams ptetools::pte
 #' @param xformula A formula for additional covariates.  This is not currently supported.
+#' @param weightsname The name of a column of sampling weights in `data`,
+#'  constant over time within each unit (default `NULL`, no weights). The
+#'  weights are used in the dose regressions, the comparison-group means,
+#'  the averages over the dose distribution and the aggregation across
+#'  timing groups, and in the corresponding influence functions. The
+#'  default `dvals` and the spline knots are chosen from the unweighted
+#'  dose distribution. Not supported with `dose_est_method = "cck"`.
 #' @param gname The name of the timing-group variable, i.e., when treatment starts for
 #'  a particular unit.  The value of this variable should be set to be 0 for units that
 #'  do not participate in the treatment in any time period.
@@ -177,7 +184,12 @@ cont_did <- function(yname,
          call. = FALSE)
   }
   if (anticipation != 0) warning("anticipation not tested yet, may not work")
-  if (!is.null(weightsname)) warning("sampling weights not tested yet, may not work")
+  # sampling weights (#14): the parametric dose estimators and both event
+  # studies use them; npiv has no weights
+  if (!is.null(weightsname) && identical(dose_est_method, "cck")) {
+    stop("weightsname is not supported with dose_est_method = \"cck\" ",
+         "(npiv does not take sampling weights).", call. = FALSE)
+  }
   assert_numeric(alp)
   if (!is.null(est_method)) stop("covariates not supported yet, set est_method=NULL")
   assert_choice(base_period, choices = c("varying", "universal"))
@@ -444,6 +456,8 @@ cont_did <- function(yname,
     control_group = control_group,
     base_period = base_period,
     clustervars = clustervars,
+    # previously not passed on, so weights had no effect (#14)
+    weightsname = weightsname,
     require_comparison = require_comparison,
     bstrap = bstrap,
     gt_type = gt_type,
@@ -540,6 +554,19 @@ cont_did_acrt <- function(
   dose <- post_data$D
   dy <- post_data$Y - pre_data$Y[match(post_data$id, pre_data$id)]
 
+  # sampling weights (#14), one per unit (all 1 without weightsname)
+  w <- post_data$.w
+  if (is.null(w)) w <- rep(1, length(dose))
+  treated <- dose > 0
+  # Treated units with zero weight drop out of the dose regression. Their
+  # influence-function entries are 0, and ptetools::process_dose_gt() finds
+  # each cell's treated units as the nonzero entries, so they must not be
+  # rows of the regression's estfun() either.
+  in_reg <- treated & w > 0
+  # weights normalized to mean 1 over the cell's treated units, so weighted
+  # averages over them are mean(w_t * x)
+  w_t <- w[treated] / mean(w[treated])
+
   dose_est_method <- list(...)$dose_est_method
   if (dose_est_method == "cck") {
     stop("cck estimator not supported with staggered adoption yet")
@@ -555,10 +582,10 @@ cont_did_acrt <- function(
 
   # evaluate every basis with the same boundary knots; otherwise bSpline() and
   # dbs() take them from the range of the points they are evaluated at
-  bs <- splines2::bSpline(dose[dose > 0], degree = degree, knots = knots, Boundary.knots = boundary_knots) |>
+  bs <- splines2::bSpline(dose[in_reg], degree = degree, knots = knots, Boundary.knots = boundary_knots) |>
     as.data.frame()
   colnames(bs) <- paste0("bs_", colnames(bs))
-  bs$dy <- dy[dose > 0]
+  bs$dy <- dy[in_reg]
 
   # The dose regression needs more treated units than parameters (intercept
   # plus spline terms). With as many units as parameters it fits them
@@ -576,7 +603,10 @@ cont_did_acrt <- function(
          "drop this group.", call. = FALSE)
   }
 
-  bs_reg <- lm(dy ~ ., data = bs)
+  # weighted least squares; the weights enter sandwich::estfun() and
+  # sandwich::bread() below, so the influence function is the weighted one
+  reg_w <- w[in_reg]
+  bs_reg <- lm(dy ~ ., data = bs, weights = reg_w)
 
   # dose_grid <- quantile(dose[dose > 0], probs = seq(0, 1, length.out = 100))
   bs_grid <- splines2::bSpline(dvals, degree = degree, knots = knots, Boundary.knots = boundary_knots) |>
@@ -586,7 +616,11 @@ cont_did_acrt <- function(
   # mean outcome change of the untreated comparison units; there are none
   # when there are no untreated units (#5), and then ATT(d) is
   # not identified (the ACRT below does not use them)
-  untreated_mean <- if (any(dose == 0)) mean(dy[dose == 0]) else NA_real_
+  untreated_mean <- if (any(dose == 0)) {
+    stats::weighted.mean(dy[dose == 0], w[dose == 0])
+  } else {
+    NA_real_
+  }
   att.d <- predict(bs_reg, newdata = bs_grid) - untreated_mean
 
   # Compute derivative of B-spline basis
@@ -603,9 +637,12 @@ cont_did_acrt <- function(
   bs_grid2 <- splines2::bSpline(dose[dose > 0], degree = degree, knots = knots, Boundary.knots = boundary_knots) |>
     as.data.frame()
   colnames(bs_grid2) <- colnames(model.matrix(bs_reg))[-1]
-  att.overall <- mean(predict(bs_reg, newdata = bs_grid2)) - untreated_mean
+  # (weighted averages over the cell's treated units)
+  att.overall <- mean(w_t * predict(bs_reg, newdata = bs_grid2)) -
+    untreated_mean
   bs_deriv2 <- splines2::dbs(dose[dose > 0], degree = degree, knots = knots, Boundary.knots = boundary_knots)
-  acrt.overall <- mean(bs_deriv2 %*% bs_reg_coef[-1, drop = FALSE])
+  acrt_i <- as.numeric(bs_deriv2 %*% bs_reg_coef[-1, drop = FALSE])
+  acrt.overall <- mean(w_t * acrt_i)
 
   # capture components of influence function
   # for inference later
@@ -628,17 +665,27 @@ cont_did_acrt <- function(
   # to compute uniform confidence bands for ATT(d) and ACRT(d)
   # to be used outside this function
 
-  # first component come from "knowing" the regression coefficients
-  inffunc1 <- bs_deriv2 %*% bs_reg_coef[-1, drop = FALSE] - acrt.overall
+  # Both components are on the scale of the n1 treated units.
+  # First component: from "knowing" the regression coefficients, the
+  # influence function of the weighted mean of acrt_i over treated units
+  inffunc1 <- w_t * (acrt_i - acrt.overall)
 
-  # second component comes from having estimated the regression coefficients
-  inffunc2 <- Xe %*% bread %*% as.matrix(c(0, colMeans(bs_deriv2))) # augment with 0 for intercept spot
+  # Second component: from having estimated the regression coefficients.
+  # With zero-weight treated units left out of the regression (n1r < n1
+  # rows), Xe %*% bread is on the n1r scale; n1 / n1r puts it on the n1
+  # scale, and the zero-weight units' entries stay 0.
+  n1 <- sum(treated)
+  n1r <- sum(in_reg)
+  inffunc2 <- rep(0, n1)
+  # augment with 0 for the intercept
+  inffunc2[w[treated] > 0] <- (n1 / n1r) *
+    as.numeric(Xe %*% bread %*% as.matrix(c(0, colMeans(w_t * bs_deriv2))))
 
-  # untreated don't contribute to influence function for ACRT; the components
-  # above are on the scale of the n1 treated units, rescale to all n units
-  # (as for ATT(d) in ptetools::process_dose_gt)
+  # untreated units don't contribute to the influence function for the
+  # ACRT; rescale from the n1 treated units to all n units in the cell (as
+  # for ATT(d) in ptetools::process_dose_gt)
   inffunc <- rep(0, nrow(post_data))
-  inffunc[dose > 0] <- (length(dose) / sum(dose > 0)) * as.numeric(inffunc1 + inffunc2)
+  inffunc[treated] <- (length(dose) / n1) * (inffunc1 + inffunc2)
 
   # some hack code to get influence function right
   # in aggregations into effects at different doses

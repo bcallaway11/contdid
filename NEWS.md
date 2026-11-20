@@ -1,5 +1,12 @@
 # contdid 0.1.3
 
+* Sampling weights (`weightsname`) now work (#14). Previously they were
+  accepted with a warning but had no effect. They enter the dose
+  regressions, the comparison-group means, the averages over the dose
+  distribution, the aggregation across timing groups, and the influence
+  functions behind the standard errors, for both the dose aggregation and
+  the event studies. `dose_est_method = "cck"` does not support weights
+  and now gives an error.
 * Bug fix: `ATT(d)` and `ACRT(d)` from `cont_did()` with
   `aggregation = "dose"` were evaluated with a different B-spline basis
   than the one the dose regression was fitted with, unless `dvals`
