@@ -1,20 +1,25 @@
 ## Submission summary
 
-This submission (0.1.2) fixes the ERRORs currently shown on the CRAN check
-results page for `contdid`. They were triggered by the release of `DRDID`
-1.4.0 (2026-10-22), which now requires the treatment indicator passed to
-`DRDID::drdid_panel()` to be binary.
+This submission (0.1.3) fixes several bugs and adds features. It requires
+`ptetools` 1.1.0, submitted to CRAN at the same time. See NEWS.md for the
+full list. The main changes:
 
-* For the level event-study case of `cont_did()`, `contdid` was passing
-  the continuous dose (through `ptetools::did_attgt()`) where `DRDID`
-  expects a 0/1 treatment indicator. The dose is now converted to a
-  treated/comparison indicator before that call. This also fixes the
-  estimates in that case, which were incorrect with earlier versions of
-  `DRDID`.
-* Adds a unit test checking that the level event study recovers a known,
-  nonzero treatment effect.
+* Bug fix: the standard errors of `ATT(d)` were too small (the
+  comparison-group part of its influence function had the wrong sign in
+  `ptetools` 1.0.1), so confidence bands undercovered. The standard errors
+  of the ACRT were also too small, by a factor equal to the share of
+  treated units in each group-time cell.
+* Bug fix: `ATT(d)` and `ACRT(d)` were evaluated with a different B-spline
+  basis than the one used for fitting, biasing the dose-response curve
+  near the ends of the dose range.
+* Arguments that were accepted but ignored now work: sampling weights
+  (`weightsname`), `control_group`, `base_period`, `anticipation`,
+  `clustervars` and `bstrap`.
+* Repeated cross sections are supported for the level event study
+  (`panel = FALSE`).
 
-No other functional changes are included.
+<!-- TODO at submission: refresh the test environments, R CMD check
+results (--as-cran) and GitHub Actions results below; they are from 0.1.2. -->
 
 ## Test environments
 

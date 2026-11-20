@@ -75,10 +75,15 @@
   "level"`, `aggregation = "eventstudy"`) is supported, using ptetools'
   repeated cross sections DiD estimator; `idname` is then not needed. The
   dose-specific estimators (ATT(d), ACRT) still need panel data (#7).
-* Require `ptetools (>= 1.1.0)`, which computes the standard errors of
-  `ATT(d)` and `ACRT(d)` with the same basis. With older `ptetools`
-  these standard errors would be too large near the ends of the dose
-  range.
+* Require `ptetools (>= 1.1.0)`, which fixes two problems with the
+  standard errors of `ATT(d)`:
+    - The comparison-group part of the `ATT(d)` influence function had the
+      wrong sign, so with `ptetools` 1.0.1 the standard errors of `ATT(d)`
+      were too small and its confidence bands undercovered. In simulations,
+      coverage of nominal 95% intervals is now about 95%.
+    - The standard errors of `ATT(d)` and `ACRT(d)` are now computed with
+      the same B-spline basis as the estimates. With older `ptetools` they
+      would be too large near the ends of the dose range.
 
 # contdid 0.1.2
 
