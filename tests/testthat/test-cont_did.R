@@ -428,6 +428,41 @@ test_that("the ACRT influence function gives the robust standard error of the do
   expect_equal(sqrt(sum(inf_func^2)) / n, se_hc0, tolerance = 1e-8)
 })
 
+# ATT(d) = x(d)'beta - m0, so with one cell its influence function is
+# (n / n1) x(d)' B^{-1} x_i e_i for treated units and -(n / n0)(dy_i - m0)
+# for comparison units. ptetools::process_dose_gt() used to flip the sign
+# of the comparison part. That cancels within one cell, but not across
+# cells where a not-yet-treated unit is first a comparison unit and later
+# treated, so ATT(d) standard errors were wrong (ptetools 1.1.0).
+test_that("the ATT(d) influence function has the right comparison-group sign", {
+  df <- linear_dose_data()
+  df <- df[df$period %in% 2:3, ]
+  n <- length(unique(df$id))
+  dv <- c(0.5, 1, 1.5)
+  res <- suppressWarnings(cont_did(
+    yname = "Y", dname = "D", gname = "G", tname = "period", idname = "id",
+    data = df, target_parameter = "level", aggregation = "dose",
+    degree = 1, dvals = dv, biters = 100
+  ))
+  pre <- df[df$period == 2, ]
+  post <- df[df$period == 3, ]
+  dy <- post$Y - pre$Y[match(post$id, pre$id)]
+  trt <- post$G > 0
+  fit <- lm(dy[trt] ~ post$D[trt])
+  m0 <- mean(dy[!trt])
+  expect_equal(unname(res$att.d), unname(coef(fit)[1] + coef(fit)[2] * dv) - m0)
+  inf_func <- res$att.d_inffunc[order(post$id), , drop = FALSE]
+  # comparison units: the same for every d
+  expect_equal(inf_func[!trt, 1], -(n / sum(!trt)) * (dy[!trt] - m0))
+  expect_equal(inf_func[!trt, 3], inf_func[!trt, 1])
+  # treated units
+  x_d <- cbind(1, dv)
+  x_i <- cbind(1, post$D[trt])
+  b_inv <- solve(crossprod(x_i) / sum(trt))
+  expected <- (n / sum(trt)) * (x_i * resid(fit)) %*% b_inv %*% t(x_d)
+  expect_equal(unname(inf_func[trt, ]), unname(expected))
+})
+
 # The choice arguments' defaults list every option and were not resolved
 # with match.arg(), so cont_did() failed when they were left at their
 # defaults (#12).
