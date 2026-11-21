@@ -28,5 +28,3 @@ Suggests:
     tidyr
 Config/testthat/edition: 3
 Config/roxygen2/version: 8.1.1
-Remotes:
-    bcallaway11/ptetools

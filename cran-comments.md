@@ -1,8 +1,10 @@
 ## Submission summary
 
 This submission (0.1.3) fixes several bugs and adds features. It requires
-`ptetools` 1.1.0, submitted to CRAN at the same time. See NEWS.md for the
-full list. The main changes:
+`ptetools` (>= 1.1.0), which was submitted to CRAN just before this
+release. `ptetools` 1.1.0 changes the internal column names its setup
+functions use, which breaks `contdid` 0.1.2 on CRAN; this release adapts
+to it. See NEWS.md for the full list. The main changes:
 
 * Bug fix: the standard errors of `ATT(d)` were too small (the
   comparison-group part of its influence function had the wrong sign in
@@ -18,24 +20,25 @@ full list. The main changes:
 * Repeated cross sections are supported for the level event study
   (`panel = FALSE`).
 
-<!-- TODO at submission: refresh the test environments, R CMD check
-results (--as-cran) and GitHub Actions results below; they are from 0.1.2. -->
-
 ## Test environments
 
-- Local Ubuntu 24.04.5 LTS, R 4.6.1 (with `DRDID` 1.4.0):
-    - All checks passed without issues.
+- Local Ubuntu 26.04.1 LTS, R 4.5.2
 - GitHub Actions
-    - Windows-latest (R release)
-    - Windows-latest (R devel)
-    - macOS-latest (R release)
-    - Ubuntu-latest (R release)
-    - Ubuntu-latest (R devel)
-    - All checks passed without issues.
+    - windows-latest (R release)
+    - windows-latest (R devel)
+    - macos-latest (R release)
+    - ubuntu-latest (R release)
+    - ubuntu-latest (R devel)
+    - All five: Status OK (0 errors, 0 warnings, 0 notes)
 
 ## R CMD check results
 
+`R CMD check --as-cran`:
+
 0 errors | 0 warnings | 0 notes
+
+(Locally, there is one NOTE that HTML validation of the manual was skipped
+because HTML Tidy is not installed on the check machine.)
 
 * CRAN's incoming checks have previously flagged possibly misspelled
   words in DESCRIPTION: "Callaway", "Sant'Anna". These are correctly
