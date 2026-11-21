@@ -1,12 +1,12 @@
 # Continuous Two-by-Two Subset
 
-A function for computing a 2x2 subset of original data. This function is
-adapted from
-[`ptetools::two_by_two_subset`](https://rdrr.io/pkg/ptetools/man/two_by_two_subset.html)
-and allows for the treatment to be continuous. This is the subset with
-post treatment periods separately for the treated group and comparison
-group and pre-treatment periods in the period immediately before the
-treated group became treated.
+A function for computing a 2x2 subset of original data with a continuous
+treatment. The cell is the same as in
+[`ptetools::two_by_two_subset()`](https://rdrr.io/pkg/ptetools/man/two_by_two_subset.html)
+(base period, comparison group, and anticipation as in
+[`did::att_gt()`](https://bcallaway11.github.io/did/reference/att_gt.html));
+the local treatment variable `D` is the dose for units in group `g` and
+0 for comparison units.
 
 ## Usage
 
@@ -18,6 +18,7 @@ cont_two_by_two_subset(
   control_group = "notyettreated",
   anticipation = 0,
   base_period = "varying",
+  require_comparison = TRUE,
   ...
 )
 ```
@@ -38,7 +39,8 @@ cont_two_by_two_subset(
 
 - control_group:
 
-  whether to use "notyettreated" (default) or "nevertreated"
+  whether to use "notyettreated" (default), "nevertreated" or
+  "eventuallytreated"
 
 - anticipation:
 
@@ -57,6 +59,13 @@ cont_two_by_two_subset(
   the treatment starts. "Universal" is commonly used in
   difference-in-differences applications, but can be unnatural for other
   identification strategies.
+
+- require_comparison:
+
+  if `FALSE` (used by
+  [`cont_did()`](https://bcallaway11.github.io/contdid/reference/cont_did.md)
+  when no unit is untreated), the cell holds only group `g`'s own units,
+  which is enough for the ACRT
 
 - ...:
 

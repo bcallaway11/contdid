@@ -12,7 +12,13 @@ An R package for difference-in-differences with a continuous treatment.
 
 ## Installation
 
-You can install the development version of contdid from
+You can install the released version of contdid from CRAN with:
+
+``` r
+install.packages("contdid")
+```
+
+or the development version from
 [GitHub](https://github.com/bcallaway11/contdid) with:
 
 ``` r
@@ -42,6 +48,10 @@ page](https://github.com/bcallaway11/contdid/issues).
 - ☑️ Aggregations into ATT or ACRT versions of event studies
 - ☑️ User-specified flexible parametric models for treatment effects as
   a function of the dose
+- ☑️ Sampling weights (`weightsname`) and clustered standard errors
+  (`clustervars`)
+- ☑️ Choice of comparison group (`control_group`), base period
+  (`base_period`), and anticipation (`anticipation`)
 
 ### 🚫 Not Yet Supported
 
@@ -56,7 +66,11 @@ page](https://github.com/bcallaway11/contdid/issues).
     not yet implemented for staggered adoption. We plan to add this in
     the future.
 
-- ❌ Repeated cross-sections data
+- ⚠️ Repeated cross-sections data
+
+  - Supported for the `ATT` event study (`target_parameter = "level"`,
+    `aggregation = "eventstudy"`) with `panel = FALSE`. Dose-specific
+    parameters and `ACRT`s still require panel data.
 
 - ❌ Unbalanced panel data
 
@@ -104,7 +118,7 @@ Next, the other important parameters are `target_parameter`,
   then the function will calculate `ACRT` parameters—these are causal
   response parameters that are derivatives of the `ATT` parameters. Our
   paper [Callaway, Goodman-Bacon, and Sant’Anna
-  (2024)](https://arxiv.org/abs/2107.02637) points out some
+  (2025)](https://arxiv.org/abs/2107.02637) points out some
   complications for interpreting these derivative type parameters under
   the most commonly invoked version of the parallel trends assumption.
 
@@ -194,25 +208,25 @@ summary(cd_res)
 #> 
 #> Overall ATT:  
 #>      ATT    Std. Error     [ 95%  Conf. Int.] 
-#>  -0.0265        0.0362    -0.0974      0.0445 
+#>  -0.0265        0.0361    -0.0972      0.0443 
 #> 
 #> 
 #> Overall ACRT:  
-#>    ACRT    Std. Error     [ 95%  Conf. Int.]  
-#>  0.1341        0.0512     0.0338      0.2345 *
+#>    ACRT    Std. Error     [ 95%  Conf. Int.] 
+#>  0.1341        0.1148    -0.0909      0.3592 
 #> ---
 #> Signif. codes: `*' confidence band does not cover 0
 ggcont_did(cd_res, type = "att")
 ```
 
-<img src="man/figures/README-unnamed-chunk-5-1.png"
+<img src="man/figures/README-unnamed-chunk-6-1.png"
 style="width:100.0%" />
 
 ``` r
 ggcont_did(cd_res, type = "acrt")
 ```
 
-<img src="man/figures/README-unnamed-chunk-5-2.png"
+<img src="man/figures/README-unnamed-chunk-6-2.png"
 style="width:100.0%" />
 
 ### Case 2: Event Study Aggregations
@@ -248,22 +262,22 @@ summary(cd_res_es_level)
 #> 
 #> Overall ATT:  
 #>      ATT    Std. Error     [ 95%  Conf. Int.] 
-#>  -0.0265        0.0268     -0.079      0.0261 
+#>  -0.0265        0.0267    -0.0789      0.0259 
 #> 
 #> 
 #> Dynamic Effects:
 #>  Event Time Estimate Std. Error [95% Simult.  Conf. Band] 
 #>          -2  -0.0297     0.0471       -0.1428      0.0835 
-#>          -1   0.0210     0.0441       -0.0848      0.1267 
-#>           0  -0.0069     0.0279       -0.0740      0.0601 
-#>           1   0.0009     0.0375       -0.0892      0.0909 
+#>          -1   0.0210     0.0440       -0.0847      0.1266 
+#>           0  -0.0069     0.0278       -0.0737      0.0599 
+#>           1   0.0009     0.0376       -0.0893      0.0910 
 #>           2  -0.0512     0.0516       -0.1751      0.0727 
 #> ---
 #> Signif. codes: `*' confidence band does not cover 0
 ggcont_did(cd_res_es_level)
 ```
 
-<img src="man/figures/README-unnamed-chunk-6-1.png"
+<img src="man/figures/README-unnamed-chunk-7-1.png"
 style="width:100.0%" />
 
 **Event study aggregation for `ACRT`:**
@@ -292,23 +306,23 @@ cd_res_es_slope <- cont_did(
 summary(cd_res_es_slope)
 #> 
 #> Overall ACRT:  
-#>     ATT    Std. Error     [ 95%  Conf. Int.]  
-#>  0.1341        0.0547     0.0269      0.2414 *
+#>     ATT    Std. Error     [ 95%  Conf. Int.] 
+#>  0.1341        0.1193    -0.0997       0.368 
 #> 
 #> 
 #> Dynamic Effects:
-#>  Event Time Estimate Std. Error [95% Simult.  Conf. Band]  
-#>          -2  -0.0701     0.0745       -0.2460      0.1057  
-#>          -1  -0.2212     0.0823       -0.4155     -0.0268 *
-#>           0   0.1592     0.0588        0.0205      0.2979 *
-#>           1   0.0551     0.0764       -0.1252      0.2354  
-#>           2  -0.5405     0.1233       -0.8316     -0.2494 *
+#>  Event Time Estimate Std. Error [95% Simult.  Conf. Band] 
+#>          -2  -0.0701     0.2220       -0.6146      0.4744 
+#>          -1  -0.2212     0.1744       -0.6490      0.2066 
+#>           0   0.1592     0.1363       -0.1751      0.4935 
+#>           1   0.0551     0.1885       -0.4073      0.5174 
+#>           2  -0.5405     0.2484       -1.1499      0.0688 
 #> ---
 #> Signif. codes: `*' confidence band does not cover 0
 ggcont_did(cd_res_es_slope)
 ```
 
-<img src="man/figures/README-unnamed-chunk-7-1.png"
+<img src="man/figures/README-unnamed-chunk-8-1.png"
 style="width:100.0%" />
 
 ### Case 3: Data-Driven Nonparametric Model for Treatment Effects
@@ -385,7 +399,7 @@ ggcont_did(cd_res_cck) +
   labs(color = "")
 ```
 
-<img src="man/figures/README-unnamed-chunk-8-1.png"
+<img src="man/figures/README-unnamed-chunk-9-1.png"
 style="width:100.0%" />
 
 ## References

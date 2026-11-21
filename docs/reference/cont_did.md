@@ -14,7 +14,7 @@ cont_did(
   dname,
   gname = NULL,
   tname,
-  idname,
+  idname = NULL,
   xformula = ~1,
   data,
   target_parameter = c("level", "slope"),
@@ -25,6 +25,7 @@ cont_did(
   degree = 3,
   num_knots = 0,
   allow_unbalanced_panel = FALSE,
+  panel = TRUE,
   control_group = c("notyettreated", "nevertreated", "eventuallytreated"),
   anticipation = 0,
   weightsname = NULL,
@@ -151,6 +152,14 @@ cont_did(
   advantage of this is that the computations are faster (sometimes
   substantially).
 
+- panel:
+
+  Whether or not the data is a panel dataset. The panel dataset should
+  be provided in long format – that is, where each row corresponds to a
+  unit observed at a particular point in time. The default is TRUE. When
+  using a panel dataset, the variable `idname` must be set. When
+  `panel=FALSE`, the data is treated as repeated cross sections.
+
 - control_group:
 
   Which units to use as the control group. The default is "nevertreated"
@@ -171,29 +180,13 @@ cont_did(
 
 - weightsname:
 
-  The name of the column containing the sampling weights. If not set,
-  all observations have same weight. When weights are time-invariant
-  (constant within each unit across periods), all `fix_weights` options
-  produce identical results and no special handling is needed.
-
-  When weights vary across time (e.g., time-varying population sizes),
-  the default behavior differs by panel type:
-
-  Balanced panel
-
-  :   Each 2x2 DiD comparison uses the weight from the earlier of the
-      two time periods involved. For post-treatment cells, this is the
-      base period (g-1). For pre-treatment cells with
-      `base_period="varying"`, this is the pre-treatment period itself.
-      The panel DRDID estimators are used.
-
-  Repeated cross sections and unbalanced panels
-
-  :   Both periods' per-observation weights are passed directly to the
-      RC DRDID estimators, so each observation carries its own
-      period-specific weight.
-
-  Use the `fix_weights` argument to override the default behavior.
+  The name of a column of sampling weights in `data`, constant over time
+  within each unit (default `NULL`, no weights). The weights are used in
+  the dose regressions, the comparison-group means, the averages over
+  the dose distribution and the aggregation across timing groups, and in
+  the corresponding influence functions. The default `dvals` and the
+  spline knots are chosen from the unweighted dose distribution. Not
+  supported with `dose_est_method = "cck"`.
 
 - alp:
 
@@ -306,7 +299,15 @@ cont_did(
 
 - cl:
 
-  number of clusters to be used when bootstrapping; default is 1
+  parallel workers for the empirical bootstrap (the multiplier bootstrap
+  does not need them); default is 1 (no parallelization). Either a
+  number of workers or a cluster object from
+  [`parallel::makeCluster()`](https://rdrr.io/r/parallel/makeCluster.html).
+  A number uses forked processes on Unix/macOS; on Windows, which cannot
+  fork, a cluster with that many workers is created and stopped
+  automatically. Cluster workers are separate R sessions: they load the
+  installed packages, and functions defined in your workspace (e.g. a
+  custom `attgt_fun`) must not rely on other objects in your workspace.
 
 - ...:
 
@@ -316,7 +317,16 @@ cont_did(
 
 ## Value
 
-cont_did_obj
+With `aggregation = "dose"`, a
+[`ptetools::dose_obj`](https://rdrr.io/pkg/ptetools/man/dose_obj.html)
+with the dose-specific effects `ATT(d)` and `ACRT(d)` and the overall
+ATT and ACRT. With `aggregation = "eventstudy"`, a
+[`ptetools::pte_results`](https://rdrr.io/pkg/ptetools/man/pte_results.html)
+object with the event study (of ATT or ACRT, depending on
+`target_parameter`) and the overall effect. Both have
+[`summary()`](https://rdrr.io/r/base/summary.html) methods and can be
+plotted with
+[`ggcont_did()`](https://bcallaway11.github.io/contdid/reference/ggcont_did.md).
 
 ## Examples
 
@@ -348,20 +358,17 @@ cd_res <- cont_did(
   num_knots = 1,
   degree = 3,
 )
-#> Warning: critical value for uniform confidence band is somehow smaller than
-#>             critical value for pointwise confidence interval...using pointwise
-#>             confidence interal
 
 summary(cd_res)
 #> 
 #> Overall ATT:  
 #>      ATT    Std. Error     [ 95%  Conf. Int.] 
-#>  -0.0332        0.0726    -0.1754      0.1091 
+#>  -0.0332        0.0636    -0.1579      0.0915 
 #> 
 #> 
 #> Overall ACRT:  
-#>     ACRT    Std. Error     [ 95%  Conf. Int.]  
-#>  -0.2988         0.143     -0.579     -0.0186 *
+#>     ACRT    Std. Error     [ 95%  Conf. Int.] 
+#>  -0.2988        0.3087    -0.9038      0.3062 
 #> ---
 #> Signif. codes: `*' confidence band does not cover 0
 #> 

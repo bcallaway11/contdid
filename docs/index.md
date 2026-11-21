@@ -4,7 +4,13 @@ An R package for difference-in-differences with a continuous treatment.
 
 ## Installation
 
-You can install the development version of contdid from
+You can install the released version of contdid from CRAN with:
+
+``` r
+install.packages("contdid")
+```
+
+or the development version from
 [GitHub](https://github.com/bcallaway11/contdid) with:
 
 ``` r
@@ -34,6 +40,10 @@ page](https://github.com/bcallaway11/contdid/issues).
 - ☑️ Aggregations into ATT or ACRT versions of event studies
 - ☑️ User-specified flexible parametric models for treatment effects as
   a function of the dose
+- ☑️ Sampling weights (`weightsname`) and clustered standard errors
+  (`clustervars`)
+- ☑️ Choice of comparison group (`control_group`), base period
+  (`base_period`), and anticipation (`anticipation`)
 
 ### 🚫 Not Yet Supported
 
@@ -48,7 +58,11 @@ page](https://github.com/bcallaway11/contdid/issues).
     not yet implemented for staggered adoption. We plan to add this in
     the future.
 
-- ❌ Repeated cross-sections data
+- ⚠️ Repeated cross-sections data
+
+  - Supported for the `ATT` event study (`target_parameter = "level"`,
+    `aggregation = "eventstudy"`) with `panel = FALSE`. Dose-specific
+    parameters and `ACRT`s still require panel data.
 
 - ❌ Unbalanced panel data
 
@@ -96,7 +110,7 @@ Next, the other important parameters are `target_parameter`,
   then the function will calculate `ACRT` parameters—these are causal
   response parameters that are derivatives of the `ATT` parameters. Our
   paper [Callaway, Goodman-Bacon, and Sant’Anna
-  (2024)](https://arxiv.org/abs/2107.02637) points out some
+  (2025)](https://arxiv.org/abs/2107.02637) points out some
   complications for interpreting these derivative type parameters under
   the most commonly invoked version of the parallel trends assumption.
 
@@ -186,24 +200,24 @@ summary(cd_res)
 #> 
 #> Overall ATT:  
 #>      ATT    Std. Error     [ 95%  Conf. Int.] 
-#>  -0.0265        0.0301    -0.0855      0.0325 
+#>  -0.0265        0.0361    -0.0972      0.0443 
 #> 
 #> 
 #> Overall ACRT:  
-#>    ACRT    Std. Error     [ 95%  Conf. Int.]  
-#>  0.1341        0.0485      0.039      0.2293 *
+#>    ACRT    Std. Error     [ 95%  Conf. Int.] 
+#>  0.1341        0.1148    -0.0909      0.3592 
 #> ---
 #> Signif. codes: `*' confidence band does not cover 0
 ggcont_did(cd_res, type = "att")
 ```
 
-![](reference/figures/README-unnamed-chunk-5-1.png)
+![](reference/figures/README-unnamed-chunk-6-1.png)
 
 ``` r
 ggcont_did(cd_res, type = "acrt")
 ```
 
-![](reference/figures/README-unnamed-chunk-5-2.png)
+![](reference/figures/README-unnamed-chunk-6-2.png)
 
 ### Case 2: Event Study Aggregations
 
@@ -238,22 +252,22 @@ summary(cd_res_es_level)
 #> 
 #> Overall ATT:  
 #>      ATT    Std. Error     [ 95%  Conf. Int.] 
-#>  -0.0265        0.0333    -0.0918      0.0389 
+#>  -0.0265        0.0267    -0.0789      0.0259 
 #> 
 #> 
 #> Dynamic Effects:
 #>  Event Time Estimate Std. Error [95% Simult.  Conf. Band] 
-#>          -2  -0.0297     0.0512       -0.1555      0.0962 
-#>          -1   0.0210     0.0382       -0.0730      0.1149 
-#>           0  -0.0069     0.0372       -0.0984      0.0845 
-#>           1   0.0009     0.0436       -0.1063      0.1080 
-#>           2  -0.0512     0.0502       -0.1746      0.0722 
+#>          -2  -0.0297     0.0471       -0.1428      0.0835 
+#>          -1   0.0210     0.0440       -0.0847      0.1266 
+#>           0  -0.0069     0.0278       -0.0737      0.0599 
+#>           1   0.0009     0.0376       -0.0893      0.0910 
+#>           2  -0.0512     0.0516       -0.1751      0.0727 
 #> ---
 #> Signif. codes: `*' confidence band does not cover 0
 ggcont_did(cd_res_es_level)
 ```
 
-![](reference/figures/README-unnamed-chunk-6-1.png)
+![](reference/figures/README-unnamed-chunk-7-1.png)
 
 **Event study aggregation for `ACRT`:**
 
@@ -281,37 +295,37 @@ cd_res_es_slope <- cont_did(
 summary(cd_res_es_slope)
 #> 
 #> Overall ACRT:  
-#>     ATT    Std. Error     [ 95%  Conf. Int.]  
-#>  0.1341        0.0584     0.0197      0.2485 *
+#>     ATT    Std. Error     [ 95%  Conf. Int.] 
+#>  0.1341        0.1193    -0.0997       0.368 
 #> 
 #> 
 #> Dynamic Effects:
-#>  Event Time Estimate Std. Error [95% Simult.  Conf. Band]  
-#>          -2  -0.0701     0.0808       -0.2710      0.1308  
-#>          -1  -0.2212     0.0892       -0.4431      0.0007  
-#>           0   0.1592     0.0586        0.0136      0.3048 *
-#>           1   0.0551     0.0828       -0.1509      0.2610  
-#>           2  -0.5405     0.1154       -0.8275     -0.2535 *
+#>  Event Time Estimate Std. Error [95% Simult.  Conf. Band] 
+#>          -2  -0.0701     0.2220       -0.6146      0.4744 
+#>          -1  -0.2212     0.1744       -0.6490      0.2066 
+#>           0   0.1592     0.1363       -0.1751      0.4935 
+#>           1   0.0551     0.1885       -0.4073      0.5174 
+#>           2  -0.5405     0.2484       -1.1499      0.0688 
 #> ---
 #> Signif. codes: `*' confidence band does not cover 0
 ggcont_did(cd_res_es_slope)
 ```
 
-![](reference/figures/README-unnamed-chunk-7-1.png)
+![](reference/figures/README-unnamed-chunk-8-1.png)
 
 ### Case 3: Data-Driven Nonparametric Model for Treatment Effects
 
 In most applications, it is hard to know the correct functional form for
-the treatment effects as a function of the dose. In Callaway et al.
-(2025), the approach we emphasize comes from Chen et al. (2025), and the
-`contdid` package uses their [`npiv`
-package](https://github.com/JeffreyRacine/npiv) to implement this
-approach. Code-wise, the only thing to change is to set the argument
-`dose_est_method="cck"`. \[Note that we currently only support this
-option for the case with two periods and no staggered adoption. With
-more periods, you can average the pre- and post-treatment periods to
-reduce it to a two period case and then run the code below; in fact,
-this is what we did in the application in our paper.\]
+the treatment effects as a function of the dose. In Callaway,
+Goodman-Bacon, and Sant’Anna (2025), the approach we emphasize comes
+from Chen, Christensen, and Kankanala (2025), and the `contdid` package
+uses their [`npiv` package](https://github.com/JeffreyRacine/npiv) to
+implement this approach. Code-wise, the only thing to change is to set
+the argument `dose_est_method="cck"`. \[Note that we currently only
+support this option for the case with two periods and no staggered
+adoption. With more periods, you can average the pre- and post-treatment
+periods to reduce it to a two period case and then run the code below;
+in fact, this is what we did in the application in our paper.\]
 
 ``` r
 # simulate data with only two periods
@@ -326,13 +340,13 @@ df2 <- simulate_contdid_data(
 )
 df2$D[df2$G == 0] <- 0
 head(df2)
-#>   id G        D time_period           Y
-#> 1  1 2 0.890987           1  1.84272906
-#> 2  1 2 0.890987           2  5.30890209
-#> 3  2 0 0.000000           1  0.59423237
-#> 4  2 0 0.000000           2  2.81443324
-#> 5  3 0 0.000000           1  1.77438193
-#> 6  3 0 0.000000           2 -0.01032246
+#>   id G         D time_period          Y
+#> 1  1 2 0.2919041           1  4.1285463
+#> 2  1 2 0.2919041           2  4.2832651
+#> 3  2 0 0.0000000           1  4.1202277
+#> 4  2 0 0.0000000           2  5.4831484
+#> 5  3 0 0.0000000           1 -0.9426794
+#> 6  3 0 0.0000000           2  0.4819572
 
 cd_res_cck <- cont_did(
   yname = "Y",
@@ -354,12 +368,12 @@ summary(cd_res_cck)
 #> 
 #> Overall ATT:  
 #>     ATT    Std. Error     [ 95%  Conf. Int.]  
-#>  0.3399         0.037     0.2673      0.4125 *
+#>  0.3789        0.0367     0.3069      0.4508 *
 #> 
 #> 
 #> Overall ACRT:  
-#>    ACRT    Std. Error     [ 95%  Conf. Int.]  
-#>  0.6595        0.1853     0.2964      1.0226 *
+#>   ACRT    Std. Error     [ 95%  Conf. Int.]  
+#>  1.036         0.266     0.5147      1.5572 *
 #> ---
 #> Signif. codes: `*' confidence band does not cover 0
 ggcont_did(cd_res_cck) +
@@ -373,12 +387,12 @@ ggcont_did(cd_res_cck) +
   labs(color = "")
 ```
 
-![](reference/figures/README-unnamed-chunk-8-1.png)
+![](reference/figures/README-unnamed-chunk-9-1.png)
 
 ## References
 
 Callaway, Brantly, Andrew Goodman-Bacon, and Pedro H. C. Sant’Anna.
-2025. *Difference-in-Differences with a Continuous Treatment*.
+2025. “Difference-in-Differences with a Continuous Treatment.”
 
 Chen, Xiaohong, Timothy Christensen, and Sid Kankanala. 2025. “Adaptive
 Estimation and Uniform Confidence Bands for Nonparametric Structural

@@ -53,7 +53,13 @@ An R package for difference-in-differences with a continuous treatment.
 
 ## Installation
 
-You can install the development version of contdid from [GitHub](https://github.com/bcallaway11/contdid) with:
+You can install the released version of contdid from CRAN with:
+
+```{r, eval=FALSE}
+install.packages("contdid")
+```
+
+or the development version from [GitHub](https://github.com/bcallaway11/contdid) with:
 
 ```{r, eval=FALSE}
 # install.packages("devtools")
@@ -75,6 +81,8 @@ We welcome feedback and encourage users to report bugs or other issues via the [
 - ☑️ Aggregations into dose-specific ATT's or ACRT's
 - ☑️ Aggregations into ATT or ACRT versions of event studies
 - ☑️ User-specified flexible parametric models for treatment effects as a function of the dose
+- ☑️ Sampling weights (`weightsname`) and clustered standard errors (`clustervars`)
+- ☑️ Choice of comparison group (`control_group`), base period (`base_period`), and anticipation (`anticipation`)
 
 ### 🚫 Not Yet Supported
 
@@ -86,7 +94,10 @@ We welcome feedback and encourage users to report bugs or other issues via the [
 
   - We have this working for cases without staggered adoption, but it is not yet implemented for staggered adoption.  We plan to add this in the future.
 
-- ❌ Repeated cross-sections data
+- ⚠️ Repeated cross-sections data
+
+  - Supported for the `ATT` event study (`target_parameter = "level"`, `aggregation = "eventstudy"`) with `panel = FALSE`.  Dose-specific parameters and `ACRT`s still require panel data.
+
 - ❌ Unbalanced panel data
 - ❌ Doses that vary over time
 
@@ -116,7 +127,7 @@ The `cont_did` function expects the continuous treatment variable to behave in c
 
 Next, the other important parameters are `target_parameter`, `aggregation`, and `treatment_type`:
 
-* `target_parameter` can either be "level" or "slope".  If "level", then the function will calculate `ATT` parameters.  If set to be "slope", then the function will calculate `ACRT` parameters---these are causal response parameters that are derivatives of the `ATT` parameters.  Our paper [Callaway, Goodman-Bacon, and Sant'Anna (2024)](https://arxiv.org/abs/2107.02637) points out some complications for interpreting these derivative type parameters under the most commonly invoked version of the parallel trends assumption.
+* `target_parameter` can either be "level" or "slope".  If "level", then the function will calculate `ATT` parameters.  If set to be "slope", then the function will calculate `ACRT` parameters---these are causal response parameters that are derivatives of the `ATT` parameters.  Our paper [Callaway, Goodman-Bacon, and Sant'Anna (2025)](https://arxiv.org/abs/2107.02637) points out some complications for interpreting these derivative type parameters under the most commonly invoked version of the parallel trends assumption.
 
 * `aggregation` can either by "eventstudy" or "dose".  For "eventstudy", depending on the value of the `target_parameter` argument, the function will provide either the average `ATT` across different event times or the average `ACRT` across different event times.  For "dose", the function will average across all time periods and report average affects across different values of the continuous treatment.  For the "dose" aggregation, results are calculated for both `ATT` and `ACRT` and can be displayed by providing different arguments to plotting functions (see example below).
 

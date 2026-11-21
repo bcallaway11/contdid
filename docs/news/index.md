@@ -1,6 +1,126 @@
 # Changelog
 
+## contdid 0.1.3
+
+- Sampling weights (`weightsname`) now work
+  ([\#14](https://github.com/bcallaway11/contdid/issues/14)). Previously
+  they were accepted with a warning but had no effect. They enter the
+  dose regressions, the comparison-group means, the averages over the
+  dose distribution, the aggregation across timing groups, and the
+  influence functions behind the standard errors, for both the dose
+  aggregation and the event studies. `dose_est_method = "cck"` does not
+  support weights and now gives an error.
+- Bug fix: `ATT(d)` and `ACRT(d)` from
+  [`cont_did()`](https://bcallaway11.github.io/contdid/reference/cont_did.md)
+  with `aggregation = "dose"` were evaluated with a different B-spline
+  basis than the one the dose regression was fitted with, unless `dvals`
+  spanned exactly the range of the positive doses. With the default
+  `dvals` (the 10% to 99% quantiles of the dose), the estimated
+  dose-response curve was biased, most of all near the ends of the dose
+  range. The basis now uses the range of the positive doses as its
+  boundary knots everywhere
+  ([\#16](https://github.com/bcallaway11/contdid/issues/16); thanks to
+  [@AsadGudzevic94](https://github.com/AsadGudzevic94)).
+- Bug fix: with groups and time periods coded as calendar years, naming
+  the group column `G` gave `NaN` estimates (ptetools
+  [\#13](https://github.com/bcallaway11/contdid/issues/13)).
+  [`cont_did()`](https://bcallaway11.github.io/contdid/reference/cont_did.md)
+  now stores the dose as an internal column, so it never overwrites a
+  user’s column, and selects each group-time subset using ptetools’
+  internal columns only.
+- `anticipation` now works:
+  [`setup_pte_cont()`](https://bcallaway11.github.io/contdid/reference/setup_pte_cont.md)
+  did not pass it (or `base_period` and `required_pre_periods`) on to
+  [`ptetools::setup_pte()`](https://rdrr.io/pkg/ptetools/man/setup_pte.html),
+  so groups without a valid base period were kept and estimation failed.
+  [`cont_two_by_two_subset()`](https://bcallaway11.github.io/contdid/reference/cont_two_by_two_subset.md)
+  now builds each cell with
+  [`ptetools::two_by_two_subset()`](https://rdrr.io/pkg/ptetools/man/two_by_two_subset.html),
+  so base periods, comparison groups and anticipation (in units of the
+  time variable) follow
+  [`did::att_gt()`](https://bcallaway11.github.io/did/reference/att_gt.html).
+- A timing group with no more treated units than parameters in the dose
+  regression now gives a clear error naming the group, instead of
+  “something off with overall influence function” or “non-conformable
+  arguments” (ptetools
+  [\#17](https://github.com/bcallaway11/contdid/issues/17)).
+- `control_group` and `base_period` are now used
+  ([\#19](https://github.com/bcallaway11/contdid/issues/19),
+  [\#10](https://github.com/bcallaway11/contdid/issues/10)). They were
+  not passed on to ptetools, so
+  [`cont_did()`](https://bcallaway11.github.io/contdid/reference/cont_did.md)
+  always used not-yet-treated comparison units and a varying base
+  period, whatever was requested. With a universal base period, the
+  outcome change is now computed between the base and current periods
+  matched by unit, which also works when the base period comes after the
+  current one (pre-treatment cells).
+- `clustervars` now clusters standard errors (analytical and bootstrap)
+  at a level above the unit, using ptetools’ new support (ptetools
+  [\#6](https://github.com/bcallaway11/contdid/issues/6)). It was
+  previously ignored with a warning. It is not supported with
+  `dose_est_method = "cck"`.
+- `bstrap = FALSE` (analytical standard errors) is now passed on to
+  ptetools; it was ignored, so the multiplier bootstrap was always used.
+  Analytical standard errors are not available for dose-specific
+  effects, where the bootstrap is still used (with a warning).
+- Bug fix: standard errors of ACRT (overall and event study) were too
+  small by a factor equal to the share of treated units in each
+  group-time cell
+  ([\#13](https://github.com/bcallaway11/contdid/issues/13)). The ACRT
+  influence function was on the scale of the treated units only; it is
+  now rescaled to all units, as for `ATT(d)`. In simulations the
+  reported SEs were about a third of the actual sampling variability
+  before and match it now. Thanks to
+  [@AsadGudzevic94](https://github.com/AsadGudzevic94)
+  ([\#17](https://github.com/bcallaway11/contdid/issues/17)).
+- [`cont_did()`](https://bcallaway11.github.io/contdid/reference/cont_did.md)
+  now works with its default choice arguments (`target_parameter`,
+  `aggregation`, `treatment_type`, `dose_est_method`, `control_group`),
+  which are resolved with
+  [`match.arg()`](https://rdrr.io/r/base/match.arg.html). Before, each
+  had to be set explicitly or the call failed an argument check
+  ([\#12](https://github.com/bcallaway11/contdid/issues/12)).
+- The ACRT can now be estimated when no unit is untreated, e.g. when
+  every unit is treated at the same time with different doses
+  ([\#5](https://github.com/bcallaway11/contdid/issues/5)). It only
+  involves derivatives of the dose-response curve, so it is identified
+  from variation in the dose within each timing group. With
+  `target_parameter = "slope"` and no untreated units,
+  [`cont_did()`](https://bcallaway11.github.io/contdid/reference/cont_did.md)
+  now estimates it (with a message), for both aggregations and for
+  `dose_est_method = "cck"`. ATT(d) and the overall ATT are not
+  identified without untreated units and are reported as `NA`; level
+  parameters give a clear error when every unit is treated at the same
+  time.
+- Fixed `dose_est_method = "cck"` with `cband = FALSE`: the ACRT(d)
+  critical value stayed at the uniform-band value instead of the
+  pointwise one.
+- `control_group = "eventuallytreated"` now works (ptetools
+  [\#29](https://github.com/bcallaway11/contdid/issues/29)): the
+  comparison units are not-yet-treated units other than the never
+  treated, and the latest-treated cohort serves only as a comparison
+  group. It used to be silently treated as `"nevertreated"`.
+- Repeated cross sections:
+  [`cont_did()`](https://bcallaway11.github.io/contdid/reference/cont_did.md)
+  gains `panel` (default `TRUE`). With `panel = FALSE`, the level event
+  study (`target_parameter = "level"`, `aggregation = "eventstudy"`) is
+  supported, using ptetools’ repeated cross sections DiD estimator;
+  `idname` is then not needed. The dose-specific estimators (ATT(d),
+  ACRT) still need panel data
+  ([\#7](https://github.com/bcallaway11/contdid/issues/7)).
+- Require `ptetools (>= 1.1.0)`, which fixes two problems with the
+  standard errors of `ATT(d)`:
+  - The comparison-group part of the `ATT(d)` influence function had the
+    wrong sign, so with `ptetools` 1.0.1 the standard errors of `ATT(d)`
+    were too small and its confidence bands undercovered. In
+    simulations, coverage of nominal 95% intervals is now about 95%.
+  - The standard errors of `ATT(d)` and `ACRT(d)` are now computed with
+    the same B-spline basis as the estimates. With older `ptetools` they
+    would be too large near the ends of the dose range.
+
 ## contdid 0.1.2
+
+CRAN release: 2026-10-30
 
 - Bug fix:
   [`cont_did()`](https://bcallaway11.github.io/contdid/reference/cont_did.md)

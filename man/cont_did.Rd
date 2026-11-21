@@ -246,7 +246,12 @@ function. These are ignored when using built-in estimation methods
 (\code{"dr"}, \code{"ipw"}, \code{"reg"}).}
 }
 \value{
-cont_did_obj
+With \code{aggregation = "dose"}, a \code{ptetools::dose_obj} with the
+dose-specific effects \code{ATT(d)} and \code{ACRT(d)} and the overall ATT and ACRT.
+With \code{aggregation = "eventstudy"}, a \code{ptetools::pte_results} object with
+the event study (of ATT or ACRT, depending on \code{target_parameter}) and
+the overall effect. Both have \code{summary()} methods and can be plotted
+with \code{\link[=ggcont_did]{ggcont_did()}}.
 }
 \description{
 A function for difference-in-differences with a continuous treatment in a

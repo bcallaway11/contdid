@@ -30,6 +30,7 @@ setup_pte_cont(
   dvals = NULL,
   degree = 1,
   num_knots = 0,
+  panel = TRUE,
   ...
 )
 ```
@@ -97,8 +98,13 @@ setup_pte_cont(
 
 - anticipation:
 
-  how many periods before the treatment actually takes place that it can
-  have an effect on outcomes
+  how long before the treatment actually takes place it can already
+  affect outcomes, in units of the time variable `tname` (e.g., years),
+  as in
+  [`did::att_gt()`](https://bcallaway11.github.io/did/reference/att_gt.html).
+  With unequally spaced periods this is not the same as a number of
+  periods. Units first treated more than `anticipation` after the last
+  period are treated as never treated.
 
 - base_period:
 
@@ -138,11 +144,24 @@ setup_pte_cont(
 
 - biters:
 
-  number of bootstrap iterations; default is 100
+  number of bootstrap iterations; default is 100. `biters = 0` skips the
+  bootstrap: where `attgt_fun` returns an influence function this is the
+  same as `bstrap = FALSE` (analytical, pointwise standard errors);
+  where standard errors are only available from the bootstrap (the
+  empirical bootstrap, dose-specific effects), the point estimates are
+  returned with `NA` standard errors.
 
 - cl:
 
-  number of clusters to be used when bootstrapping; default is 1
+  parallel workers for the empirical bootstrap (the multiplier bootstrap
+  does not need them); default is 1 (no parallelization). Either a
+  number of workers or a cluster object from
+  [`parallel::makeCluster()`](https://rdrr.io/r/parallel/makeCluster.html).
+  A number uses forked processes on Unix/macOS; on Windows, which cannot
+  fork, a cluster with that many workers is created and stopped
+  automatically. Cluster workers are separate R sessions: they load the
+  installed packages, and functions defined in your workspace (e.g. a
+  custom `attgt_fun`) must not rely on other objects in your workspace.
 
 - dname:
 
@@ -177,6 +196,11 @@ setup_pte_cont(
   that the spline is global (i.e., this will amount to fitting a global
   polynomial). There is a bias-variance tradeoff for including more or
   less knots.
+
+- panel:
+
+  Whether the data are panel data. The default is TRUE. Set to FALSE for
+  repeated cross sections.
 
 - ...:
 

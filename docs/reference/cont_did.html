@@ -13,7 +13,7 @@ B-splines under the hood."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">contdid</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,7 +51,7 @@ B-splines under the hood.</p>
 <span>  <span class="va">dname</span>,</span>
 <span>  gname <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">tname</span>,</span>
-<span>  <span class="va">idname</span>,</span>
+<span>  idname <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  xformula <span class="op">=</span> <span class="op">~</span><span class="fl">1</span>,</span>
 <span>  <span class="va">data</span>,</span>
 <span>  target_parameter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"level"</span>, <span class="st">"slope"</span><span class="op">)</span>,</span>
@@ -62,6 +62,7 @@ B-splines under the hood.</p>
 <span>  degree <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  num_knots <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  allow_unbalanced_panel <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  panel <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  control_group <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"notyettreated"</span>, <span class="st">"nevertreated"</span>, <span class="st">"eventuallytreated"</span><span class="op">)</span>,</span>
 <span>  anticipation <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  weightsname <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -179,6 +180,16 @@ The advantage of this is that the computations are faster
 (sometimes substantially).</p></dd>
 
 
+<dt id="arg-panel">panel<a class="anchor" aria-label="anchor" href="#arg-panel"></a></dt>
+<dd><p>Whether or not the data is a panel dataset.
+The panel dataset should be provided in long format – that
+is, where each row corresponds to a unit observed at a
+particular point in time.  The default is TRUE.  When
+using a panel dataset, the variable <code>idname</code> must
+be set.  When <code>panel=FALSE</code>, the data is treated
+as repeated cross sections.</p></dd>
+
+
 <dt id="arg-control-group">control_group<a class="anchor" aria-label="anchor" href="#arg-control-group"></a></dt>
 <dd><p>Which units to use as the control group.
 The default is "nevertreated" which sets the control group
@@ -200,26 +211,13 @@ treatment and therefore it can affect their untreated potential outcomes</p></dd
 
 
 <dt id="arg-weightsname">weightsname<a class="anchor" aria-label="anchor" href="#arg-weightsname"></a></dt>
-<dd><p>The name of the column containing the sampling weights.
-If not set, all observations have same weight. When weights are
-time-invariant (constant within each unit across periods), all
-<code>fix_weights</code> options produce identical results and no special
-handling is needed.</p>
-<p>When weights vary across time (e.g., time-varying population sizes),
-the default behavior differs by panel type:</p><dl><dt>Balanced panel</dt>
-<dd><p>Each 2x2 DiD comparison uses the weight from the
-earlier of the two time periods involved. For post-treatment cells,
-this is the base period (g-1). For pre-treatment cells with
-<code>base_period="varying"</code>, this is the pre-treatment period itself.
-The panel DRDID estimators are used.</p></dd>
-
-<dt>Repeated cross sections and unbalanced panels</dt>
-<dd><p>Both periods'
-per-observation weights are passed directly to the RC DRDID estimators,
-so each observation carries its own period-specific weight.</p></dd>
-
-
-</dl><p>Use the <code>fix_weights</code> argument to override the default behavior.</p></dd>
+<dd><p>The name of a column of sampling weights in <code>data</code>,
+constant over time within each unit (default <code>NULL</code>, no weights). The
+weights are used in the dose regressions, the comparison-group means,
+the averages over the dose distribution and the aggregation across
+timing groups, and in the corresponding influence functions. The
+default <code>dvals</code> and the spline knots are chosen from the unweighted
+dose distribution. Not supported with <code>dose_est_method = "cck"</code>.</p></dd>
 
 
 <dt id="arg-alp">alp<a class="anchor" aria-label="anchor" href="#arg-alp"></a></dt>
@@ -329,7 +327,15 @@ Default is <code>FALSE</code>.</p></dd>
 
 
 <dt id="arg-cl">cl<a class="anchor" aria-label="anchor" href="#arg-cl"></a></dt>
-<dd><p>number of clusters to be used when bootstrapping; default is 1</p></dd>
+<dd><p>parallel workers for the empirical bootstrap (the multiplier
+bootstrap does not need them); default is 1 (no parallelization). Either
+a number of workers or a cluster object from
+<code><a href="https://rdrr.io/r/parallel/makeCluster.html" class="external-link">parallel::makeCluster()</a></code>. A number uses forked processes on
+Unix/macOS; on Windows, which cannot fork, a cluster with that many
+workers is created and stopped automatically. Cluster workers are
+separate R sessions: they load the installed packages, and functions
+defined in your workspace (e.g. a custom <code>attgt_fun</code>) must not rely
+on other objects in your workspace.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -340,7 +346,12 @@ function. These are ignored when using built-in estimation methods
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>cont_did_obj</p>
+    <p>With <code>aggregation = "dose"</code>, a <code><a href="https://rdrr.io/pkg/ptetools/man/dose_obj.html" class="external-link">ptetools::dose_obj</a></code> with the
+dose-specific effects <code>ATT(d)</code> and <code>ACRT(d)</code> and the overall ATT and ACRT.
+With <code>aggregation = "eventstudy"</code>, a <code><a href="https://rdrr.io/pkg/ptetools/man/pte_results.html" class="external-link">ptetools::pte_results</a></code> object with
+the event study (of ATT or ACRT, depending on <code>target_parameter</code>) and
+the overall effect. Both have <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> methods and can be plotted
+with <code><a href="ggcont_did.html">ggcont_did()</a></code>.</p>
     </div>
 
     <div class="section level2">
@@ -372,20 +383,17 @@ function. These are ignored when using built-in estimation methods
 <span class="r-in"><span>  num_knots <span class="op">=</span> <span class="fl">1</span>,</span></span>
 <span class="r-in"><span>  degree <span class="op">=</span> <span class="fl">3</span>,</span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>critical value for uniform confidence band is somehow smaller than</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span>             critical value for pointwise confidence interval...using pointwise</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span>             confidence interal</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">cd_res</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Overall ATT:  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      ATT    Std. Error     [ 95%  Conf. Int.] </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  -0.0332        0.0726    -0.1754      0.1091 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  -0.0332        0.0636    -0.1579      0.0915 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Overall ACRT:  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     ACRT    Std. Error     [ 95%  Conf. Int.]  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  -0.2988         0.143     -0.579     -0.0186 *</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     ACRT    Std. Error     [ 95%  Conf. Int.] </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  -0.2988        0.3087    -0.9038      0.3062 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ---</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Signif. codes: `*' confidence band does not cover 0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>

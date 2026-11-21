@@ -3,7 +3,7 @@
 # Description: cont_did() and the (g,t)-level estimators and data subsetting
 #   it hands to ptetools for DiD with a continuous treatment
 # Author: Brant Callaway
-# Last update: 2026-11-19
+# Last update: 2026-11-21
 # Date created: 2024-09-11
 # =============================================================================
 
@@ -73,7 +73,12 @@
 #'  so that the spline is global (i.e., this will amount to fitting a global polynomial).
 #' There is a bias-variance tradeoff for including more or less knots.
 #'
-#' @return cont_did_obj
+#' @return With `aggregation = "dose"`, a `ptetools::dose_obj` with the
+#'  dose-specific effects `ATT(d)` and `ACRT(d)` and the overall ATT and ACRT.
+#'  With `aggregation = "eventstudy"`, a `ptetools::pte_results` object with
+#'  the event study (of ATT or ACRT, depending on `target_parameter`) and
+#'  the overall effect. Both have `summary()` methods and can be plotted
+#'  with [ggcont_did()].
 #'
 #' @examples
 #' # build small simulated data

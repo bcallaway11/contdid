@@ -15,12 +15,12 @@ Source:
 
 Callaway B, Goodman-Bacon A, Sant'Anna P (2026).
 *Difference-in-Differences with a Continuous Treatment*. R package
-version 0.1.2, <https://bcallaway11.github.io/contdid/>.
+version 0.1.3, <https://bcallaway11.github.io/contdid/>.
 
     @Manual{,
       title = {Difference-in-Differences with a Continuous Treatment},
       author = {Brantly Callaway and Andrew Goodman-Bacon and Pedro H. C. Sant'Anna},
       year = {2026},
-      note = {R package version 0.1.2},
+      note = {R package version 0.1.3},
       url = {https://bcallaway11.github.io/contdid/},
     }
