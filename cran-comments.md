@@ -1,10 +1,10 @@
 ## Submission summary
 
 This submission (0.1.3) fixes several bugs and adds features. It requires
-`ptetools` (>= 1.1.0), which was submitted to CRAN just before this
-release. `ptetools` 1.1.0 changes the internal column names its setup
-functions use, which breaks `contdid` 0.1.2 on CRAN; this release adapts
-to it. See NEWS.md for the full list. The main changes:
+`ptetools` (>= 1.1.0), now on CRAN. `ptetools` 1.1.0 changes the internal
+column names its setup functions use, which breaks `contdid` 0.1.2 on
+CRAN (as flagged in the `ptetools` reverse-dependency check); this release
+adapts to it. See NEWS.md for the full list. The main changes:
 
 * Bug fix: the standard errors of `ATT(d)` were too small (the
   comparison-group part of its influence function had the wrong sign in
